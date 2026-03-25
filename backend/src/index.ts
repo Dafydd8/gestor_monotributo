@@ -1,28 +1,21 @@
 import dotenv from "dotenv";
 dotenv.config();
-
 import express from "express";
 import cors from "cors";
 import authRoutes from "./routes/auth.routes";
-
-import { authMiddleware, AuthenticatedRequest } from "./middlewares/auth.middleware";
+import invoiceRoutes from "./routes/invoice.routes";
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 app.use("/auth", authRoutes);
+app.use("/invoices", invoiceRoutes);
 
 app.get("/health", (req, res) => {
   res.send("OK");
 });
 
-app.get("/protected", authMiddleware, (req: AuthenticatedRequest, res) => {
-  return res.json({
-    message: "Entraste a una ruta protegida",
-    user: req.user,
-  });
-});
 
 const PORT = 3000;
 app.listen(PORT, () => {
