@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Monotributo — Control de facturación</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;background:#f5f4f0;color:#1a1a18;line-height:1.5}
+.app{max-width:1020px;margin:0 auto;padding:0 0 3rem}
+.header{background:#fff;border-bottom:1px solid #e0dfd8;padding:1.1rem 1.5rem}
+.header h1{font-size:18px;font-weight:700;margin-bottom:2px}
+.header p{font-size:12px;color:#888}
+.tabs{background:#fff;display:flex;border-bottom:1px solid #e0dfd8;padding:0 1.5rem}
+.tab{padding:9px 16px;font-size:13px;cursor:pointer;color:#888;border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-1px;font-family:inherit;transition:color .15s}
+.tab:hover{color:#333}
+.tab.active{color:#1a1a18;border-bottom-color:#1a1a18;font-weight:600}
+.panel{display:none;padding:1.25rem}
+.panel.active{display:block}
+
+.sg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.1rem}
+.sc{background:#fff;border:1px solid #e0dfd8;border-radius:10px;padding:.9rem 1rem}
+.sc .lb{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.sc .vl{font-size:19px;font-weight:700}
+.sc .sb{font-size:11px;color:#888;margin-top:2px}
+.cat-badge{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;font-size:19px;font-weight:800;color:#fff;margin-right:9px;flex-shrink:0}
+
+/* Progress */
+.prb{background:#fff;border:1px solid #e0dfd8;border-radius:10px;padding:.9rem 1rem;margin-bottom:1.1rem}
+.prb h3{font-size:12px;font-weight:700;margin-bottom:9px}
+.pt{background:#e8e7e0;border-radius:5px;height:9px;overflow:hidden;margin-bottom:5px}
+.pf{height:100%;border-radius:5px;transition:width .4s}
+.pll{display:flex;justify-content:space-between;font-size:11px;color:#888}
+
+/* Proyeccion */
+.pb{background:#fff;border:1px solid #e0dfd8;border-radius:10px;padding:.9rem 1.1rem;margin-bottom:1.1rem}
+.pb h3{font-size:13px;font-weight:700;margin-bottom:9px}
+.pb-sub{font-size:11px;color:#888;margin-bottom:8px}
+.pg2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px}
+.pg2-lbl{font-size:11px;font-weight:700;color:#555;margin-bottom:5px;padding-bottom:4px;border-bottom:1px solid #e0dfd8}
+.pc{border-radius:8px;padding:.75rem .9rem}
+.pc .pl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+.pc .pv{font-size:20px;font-weight:700;margin-bottom:2px}
+.pc .ps{font-size:11px;line-height:1.5;opacity:.85}
+.pj{background:#eff6ff;border:1px solid #bfdbfe}.pj .pl,.pj .ps{color:#1e40af}.pj .pv{color:#1d4ed8}
+.pe{background:#f0fdf4;border:1px solid #bbf7d0}.pe .pl,.pe .ps{color:#166534}.pe .pv{color:#15803d}
+.pw{background:#fffbeb;border:1px solid #fde68a}.pw .pl,.pw .ps{color:#92400e}.pw .pv{color:#b45309}
+.pd{background:#fef2f2;border:1px solid #fecaca}.pd .pl,.pd .ps{color:#991b1b}.pd .pv{color:#dc2626}
+.pg-header{font-size:12px;font-weight:700;color:#555;padding:6px 10px;background:#faf9f6;border-radius:7px;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+
+/* Recat */
+.rg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1.1rem}
+.rc{background:#fff;border:1px solid #e0dfd8;border-radius:10px;padding:.9rem 1rem}
+.rc h4{font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px}
+.rc .big{font-size:15px;font-weight:700;margin-bottom:6px}
+.ir{display:flex;justify-content:space-between;align-items:baseline;margin-top:3px}
+.il{font-size:11px;color:#888}.iv{font-size:11px;font-weight:600}
+.ok{color:#15803d}.warn{color:#c07800}.danger{color:#c03030}
+
+.sh{font-size:13px;font-weight:700;margin-bottom:7px}
+.tw{overflow-x:auto;background:#fff;border:1px solid #e0dfd8;border-radius:10px}
+table{width:100%;font-size:12px;border-collapse:collapse}
+thead th{padding:7px 9px;text-align:left;font-weight:600;color:#888;border-bottom:1px solid #e0dfd8;font-size:11px;white-space:nowrap;background:#faf9f6}
+tbody td{padding:6px 9px;border-bottom:1px solid #f0efe8;color:#1a1a18;white-space:nowrap}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:#faf9f6}
+.r{text-align:right;font-variant-numeric:tabular-nums}
+.neg{color:#c03030}
+.muted{color:#999;font-size:11px}
+
+tr.jul-row td{border-top:2px solid #93c5fd}
+tr.ene-row td{border-top:2px solid #86efac}
+.badge{display:inline-block;font-size:9px;padding:1px 5px;border-radius:7px;font-weight:700;vertical-align:middle;margin-left:4px}
+.bj{background:#dbeafe;color:#1e40af}
+.be{background:#dcfce7;color:#166534}
+.bc{background:#fef9c3;color:#854d0e}
+
+.top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:.9rem;gap:8px;flex-wrap:wrap}
+.btn{padding:6px 14px;font-size:12px;border-radius:7px;cursor:pointer;font-family:inherit;font-weight:600;transition:all .15s;white-space:nowrap}
+.btn-primary{background:#1a1a18;color:#fff;border:none}
+.btn-primary:hover{background:#333}
+.btn-outline{background:#fff;border:1px solid #ccc;color:#333}
+.btn-outline:hover{background:#f5f4f0}
+.btn-sm{padding:3px 8px;font-size:11px;border-radius:6px}
+.btn-edit{background:#fff;border:1px solid #ddd;color:#555}
+.btn-edit:hover{background:#f5f4f0}
+.btn-del{background:#fff;border:1px solid #ddd;color:#c03030}
+.btn-del:hover{background:#fff0f0}
+.btn-imp{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af}
+.btn-imp:hover{background:#dbeafe}
+.acts{display:flex;gap:4px}
+
+.tipo{display:inline-block;padding:2px 7px;border-radius:9px;font-size:10px;font-weight:700}
+.tfc{background:#dbeafe;color:#1e40af}
+.tnc{background:#fee2e2;color:#991b1b}
+.tmi{background:#dcfce7;color:#166534}
+
+/* Import */
+.drop-zone{border:2px dashed #bfdbfe;border-radius:10px;padding:2rem 1rem;text-align:center;cursor:pointer;transition:all .2s;background:#f8fbff;margin-bottom:1rem}
+.drop-zone:hover,.drop-zone.drag-over{border-color:#3b82f6;background:#eff6ff}
+.drop-zone .dz-icon{font-size:32px;margin-bottom:8px}
+.drop-zone p{font-size:13px;color:#555;margin-bottom:4px}
+.drop-zone small{font-size:11px;color:#999}
+.spinner{display:inline-block;width:13px;height:13px;border:2px solid #ddd;border-top-color:#3b82f6;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:3px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.imp-row-ok td{background:#f0fdf4!important}
+.imp-row-warn td{background:#fffbeb!important}
+.imp-row-err td{background:#fef2f2!important}
+.imp-status{font-size:10px;font-weight:700}
+.imp-status.ok{color:#15803d}.imp-status.warn{color:#b45309}.imp-status.err{color:#dc2626}
+
+/* Cat history */
+.hist-period{background:#fff;border:1px solid #e0dfd8;border-radius:10px;margin-bottom:8px;overflow:hidden}
+.hist-hdr{padding:.65rem 1rem;background:#faf9f6;border-bottom:1px solid #e0dfd8;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
+.hist-hdr h4{font-size:13px;font-weight:700}
+.hist-meta{font-size:11px;color:#888}
+.hist-body{overflow:hidden;transition:max-height .25s ease}
+.ipc-badge{display:inline-block;font-size:10px;padding:1px 6px;border-radius:6px;font-weight:700;margin-left:6px;background:#dcfce7;color:#166534}
+
+/* IPC editor */
+.ipc-box{background:#fff;border:1px solid #e0dfd8;border-radius:10px;padding:.9rem 1.1rem;margin-bottom:1.1rem}
+.ipc-box h3{font-size:13px;font-weight:700;margin-bottom:.7rem}
+.ipc-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.ipc-field{display:flex;align-items:center;gap:6px;background:#f5f4f0;border-radius:8px;padding:6px 10px}
+.ipc-field label{font-size:12px;color:#666;font-weight:600;white-space:nowrap}
+.ipc-field input{width:65px;padding:4px 6px;font-size:13px;font-weight:700;border:1px solid #ccc;border-radius:6px;font-family:inherit;text-align:center}
+.ipc-field .unit{font-size:12px;color:#888}
+
+/* Modals */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center}
+.overlay.open{display:flex}
+.modal{background:#fff;border-radius:12px;padding:1.5rem;width:480px;max-width:96vw;box-shadow:0 8px 40px rgba(0,0,0,.18);max-height:90vh;overflow-y:auto}
+.modal h3{font-size:15px;font-weight:700;margin-bottom:1rem}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fg{margin-bottom:10px}
+.fg label{display:block;font-size:11px;color:#666;margin-bottom:3px;font-weight:600}
+.fg input,.fg select{width:100%;padding:7px 9px;font-size:13px;border:1px solid #ccc;border-radius:7px;font-family:inherit;background:#fff;color:#1a1a18}
+.fg input:focus,.fg select:focus{outline:none;border-color:#888}
+.macts{display:flex;justify-content:flex-end;gap:8px;margin-top:1rem}
+.upd-grid{display:grid;grid-template-columns:40px 1fr;gap:5px 10px;align-items:center;margin-bottom:1rem}
+.upd-grid .hdr{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;padding-bottom:4px;border-bottom:1px solid #e0dfd8}
+.upd-inp{width:100%;padding:5px 8px;font-size:12px;border:1px solid #ccc;border-radius:6px;font-family:inherit;text-align:right}
+
+.ibox{background:#fff;border:1px solid #e0dfd8;border-radius:10px;padding:11px 13px;font-size:12px;color:#666;margin-bottom:.9rem;line-height:1.6}
+.ibox strong{color:#1a1a18}
+.note{font-size:11px;color:#888;margin-top:8px}
+.note a{color:#1e40af}
+.empty{text-align:center;padding:2rem 1rem;color:#aaa;font-size:13px}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-thumb{background:#ccc;border-radius:3px}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="header">
+  <h1>Monotributo — Control de facturación</h1>
+  <p>Recategorización en Enero (topes Ene–Jun) y Julio (topes Jul–Dic) · Servicios</p>
+</div>
+<div class="tabs">
+  <button class="tab active" onclick="showTab('dashboard',this)">Resumen</button>
+  <button class="tab" onclick="showTab('facturas',this)">Facturas</button>
+  <button class="tab" onclick="showTab('mensual',this)">Por mes</button>
+  <button class="tab" onclick="showTab('categorias',this)">Categorías</button>
+</div>
+
+<!-- DASHBOARD -->
+<div id="tab-dashboard" class="panel active">
+  <div class="sg">
+    <div class="sc">
+      <div class="lb">Categoría actual <span id="cat-origen" style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px"></span></div>
+      <div style="display:flex;align-items:center;margin-top:4px">
+        <div class="cat-badge" id="badge-cat">G</div>
+        <div><div class="vl" id="dash-cat" style="font-size:15px">—</div><div class="sb" id="dash-cat-max"></div></div>
+      </div>
+    </div>
+    <div class="sc">
+      <div class="lb" id="lbl-prox1">Acum. parcial – próx. corte</div>
+      <div class="vl" id="dash-prox1">$0</div>
+      <div class="sb" id="sub-prox1">—</div>
+    </div>
+    <div class="sc">
+      <div class="lb" id="lbl-prox2">Acum. parcial – siguiente corte</div>
+      <div class="vl" id="dash-prox2">$0</div>
+      <div class="sb" id="sub-prox2">—</div>
+    </div>
+  </div>
+
+  <div class="prb">
+    <h3 id="prog-title">Progreso en categoría</h3>
+    <div class="pt"><div class="pf" id="prog-fill" style="width:0%"></div></div>
+    <div class="pll"><span id="prog-desde"></span><span id="prog-pct" style="font-weight:700">0%</span><span id="prog-hasta"></span></div>
+  </div>
+
+  <!-- PROYECCIÓN DOBLE -->
+  <div class="pb">
+    <h3>¿Cuánto puedo facturar por mes para no subirme de categoría?</h3>
+    <p class="pb-sub">Dos escenarios para el próximo corte: sin actualización de topes, y con actualización estimada por IPC.</p>
+    <div id="proy-container"></div>
+  </div>
+
+  <div class="rg">
+    <div class="rc">
+      <h4 id="rj-title">Último corte (categoría vigente)</h4>
+      <div class="big" id="rj-cat">—</div>
+      <div class="ir"><span class="il">Período facturación</span><span class="iv" id="rj-per">—</span></div>
+      <div class="ir"><span class="il">Topes aplicados</span><span class="iv" id="rj-topes">—</span></div>
+      <div class="ir"><span class="il">Acumulado</span><span class="iv" id="rj-acum">—</span></div>
+      <div class="ir"><span class="il">Sobre cat. anterior</span><span class="iv ok" id="rj-exceso">—</span></div>
+      <div class="ir"><span class="il">Para cat. siguiente</span><span class="iv" id="rj-falta">—</span></div>
+    </div>
+    <div class="rc">
+      <h4 id="re-title">Próximo corte (proyección)</h4>
+      <div class="big" id="re-cat">—</div>
+      <div class="ir"><span class="il">Período facturación</span><span class="iv" id="re-per">—</span></div>
+      <div class="ir"><span class="il">Topes aplicados</span><span class="iv" id="re-topes">—</span></div>
+      <div class="ir"><span class="il">Acumulado parcial</span><span class="iv" id="re-acum">—</span></div>
+      <div class="ir"><span class="il">Sobre cat. anterior</span><span class="iv ok" id="re-exceso">—</span></div>
+      <div class="ir"><span class="il">Para cat. siguiente</span><span class="iv" id="re-falta">—</span></div>
+    </div>
+  </div>
+
+  <p class="sh">Últimos 6 meses</p>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Mes</th><th class="r">Facturado</th><th class="r">Acum. 12m (ventana)</th><th>Categoría</th><th class="r">Tope vigente ese mes</th><th class="r">Margen</th></tr></thead>
+      <tbody id="dash-monthly"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- FACTURAS -->
+<div id="tab-facturas" class="panel">
+  <div class="top-bar">
+    <span class="sh" style="margin:0">Comprobantes</span>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn btn-imp" onclick="openImport()">📄 Importar PDF / imagen</button>
+      <button class="btn btn-primary" onclick="openModal()">+ Nueva manual</button>
+    </div>
+  </div>
+
+  <div id="import-section" style="display:none;margin-bottom:1rem">
+    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()"
+         ondragover="event.preventDefault();this.classList.add('drag-over')"
+         ondragleave="this.classList.remove('drag-over')"
+         ondrop="handleDrop(event)">
+      <div class="dz-icon">📂</div>
+      <p>Arrastrá PDFs acá o hacé clic para seleccionar</p>
+      <small>Facturas PDF de ARCA/AFIP · Podés importar varios a la vez · Sin internet ni clave necesaria</small>
+    </div>
+    <input type="file" id="file-input" multiple accept=".pdf" style="display:none" onchange="handleFiles(this.files)">
+
+    <div id="import-preview" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
+        <span style="font-size:13px;font-weight:700">Revisá los datos extraídos antes de importar</span>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-outline btn-sm" onclick="closeImport()">Cancelar</button>
+          <button class="btn btn-primary btn-sm" onclick="confirmImport()">Importar seleccionadas</button>
+        </div>
+      </div>
+      <div id="import-errors" style="display:none;margin-bottom:8px;padding:8px 12px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;font-size:12px;color:#991b1b"></div>
+      <div class="tw">
+        <table>
+          <thead><tr><th><input type="checkbox" id="chk-all" onchange="toggleAllImport(this.checked)" checked></th><th>Archivo</th><th>Nro</th><th>Tipo</th><th>Fecha fac.</th><th>Fecha desde</th><th>Cliente</th><th class="r">Monto</th><th>Estado</th></tr></thead>
+          <tbody id="import-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th>Nro</th><th>Fecha fac.</th><th>Fecha desde</th><th>Tipo</th><th>Cliente</th><th>CUIT</th><th class="r">Monto</th><th></th></tr></thead>
+      <tbody id="facturas-tbody"></tbody>
+    </table>
+  </div>
+  <div id="facturas-empty" class="empty" style="display:none">No hay facturas cargadas.</div>
+</div>
+
+<!-- MENSUAL -->
+<div id="tab-mensual" class="panel">
+  <div class="ibox">
+    <strong>Acum. 12m (ventana deslizante):</strong> suma de los 12 meses que terminan en cada mes, comparada con los topes vigentes en ese momento.
+    <span class="badge bj">Corte Julio</span> y <span class="badge be">Corte Enero</span> son los meses que determinan la recategorización.
+    <span class="badge bc">Cat. actual</span> indica el corte que fijó la categoría vigente hoy.
+  </div>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Mes</th><th class="r">Facturado</th><th class="r">Acum. 12m (ventana)</th><th>Categoría</th><th class="r">Tope vigente ese mes</th><th class="r">Margen restante</th></tr></thead>
+      <tbody id="mensual-tbody"></tbody>
+    </table>
+  </div>
+  <div id="mensual-empty" class="empty" style="display:none">Sin datos.</div>
+</div>
+
+<!-- CATEGORIAS -->
+<div id="tab-categorias" class="panel">
+
+  <div class="ipc-box">
+    <h3>Estimación de topes para la próxima actualización</h3>
+    <div class="ipc-row">
+      <div class="ipc-field">
+        <label>IPC estimado próx. semestre</label>
+        <input type="number" id="ipc-input" value="15" min="0" max="300" step="0.1" oninput="renderCats()">
+        <span class="unit">%</span>
+      </div>
+      <span style="font-size:12px;color:#666">Los topes se actualizan en Enero y Julio aplicando el IPC del semestre anterior. La columna estimada multiplica los topes actuales por ese factor.</span>
+    </div>
+  </div>
+
+  <div class="top-bar">
+    <span class="sh" style="margin:0">Topes vigentes y proyección</span>
+    <button class="btn btn-primary" onclick="openUpdateLimits()">🔄 Registrar nuevos topes</button>
+  </div>
+
+  <div style="margin-bottom:1.1rem">
+    <div class="tw">
+      <table>
+        <thead>
+          <tr>
+            <th>Cat.</th>
+            <th class="r">Tope vigente (servicios)</th>
+            <th class="r" id="th-proj">Tope estimado próx. actualiz.</th>
+          </tr>
+        </thead>
+        <tbody id="cat-vigente-tbody"></tbody>
+      </table>
+    </div>
+    <p class="note">Topes vigentes: <span id="vig-label"></span>. Fuente: <a href="https://www.arca.gob.ar/monotributo/categorias.asp" target="_blank">ARCA</a></p>
+  </div>
+
+  <p class="sh">Períodos anteriores</p>
+  <div id="hist-container"></div>
+
+  <div class="ibox" style="margin-top:.9rem">
+    <strong>Importante:</strong> esta app calcula la categoría únicamente por facturación anual. El monotributo también considera superficie, energía eléctrica, alquileres y precio unitario máximo. Consultá con un contador para la categorización definitiva.
+  </div>
+</div>
+</div>
+
+<!-- MODAL FACTURA -->
+<div class="overlay" id="modal-overlay">
+  <div class="modal">
+    <h3 id="modal-title">Nueva factura</h3>
+    <div class="frow">
+      <div class="fg"><label>Nro comprobante</label><input type="text" id="f-nro" placeholder="0001-00000001"></div>
+      <div class="fg"><label>Tipo</label>
+        <select id="f-tipo"><option value="FC">Factura C</option><option value="NC">Nota de Crédito C</option><option value="MI">Factura MIPYME C</option></select>
+      </div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label>Fecha de factura</label><input type="date" id="f-ffac"></div>
+      <div class="fg"><label>Fecha desde</label><input type="date" id="f-fdesde"></div>
+    </div>
+    <div class="fg"><label>Cliente</label><input type="text" id="f-cliente" placeholder="Nombre o razón social"></div>
+    <div class="fg"><label>CUIT del cliente</label><input type="text" id="f-cuit" placeholder="XX-XXXXXXXX-X"></div>
+    <div class="fg"><label>Monto (positivo — el tipo define si suma o resta)</label><input type="number" id="f-monto" placeholder="0.00" min="0" step="0.01"></div>
+    <div class="macts">
+      <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveFactura()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ACTUALIZAR TOPES -->
+<div class="overlay" id="upd-overlay">
+  <div class="modal" style="width:400px">
+    <h3>Registrar nuevos topes de facturación</h3>
+    <div class="frow">
+      <div class="fg"><label>Vigente desde</label><input type="date" id="upd-desde"></div>
+      <div class="fg"><label>Vigente hasta (vacío = actual)</label><input type="date" id="upd-hasta"></div>
+    </div>
+    <div class="fg"><label>Etiqueta del período (ej: "Jul 2026 – Dic 2026")</label><input type="text" id="upd-label" placeholder="Jul 2026 – Dic 2026"></div>
+    <p style="font-size:11px;color:#666;margin-bottom:8px">Topes anuales de facturación para servicios. Los valores pre-cargados son la estimación por IPC.</p>
+    <div class="upd-grid" id="upd-grid">
+      <div class="hdr">Cat.</div><div class="hdr">Tope servicios</div>
+    </div>
+    <div class="macts">
+      <button class="btn btn-outline" onclick="closeUpdateLimits()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveUpdateLimits()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CAT_COLORS = {A:'#1D9E75',B:'#0F6E56',C:'#378ADD',D:'#185FA5',E:'#BA7517',F:'#E8593C',G:'#D85A30',H:'#993C1D',I:'#D4537E',J:'#993556',K:'#534AB7'};
+
+const HIST_DEFAULT = [{"id": "jul2024_dic2024", "vigDesde": "2024-07-01", "vigHasta": "2024-12-31", "label": "Jul 2024 – Dic 2024", "cats": [{"cat": "A", "serv": 6450000}, {"cat": "B", "serv": 9450000}, {"cat": "C", "serv": 13250000}, {"cat": "D", "serv": 16450000}, {"cat": "E", "serv": 19350000}, {"cat": "F", "serv": 24250000}, {"cat": "G", "serv": 29000000}, {"cat": "H", "serv": 44000000}, {"cat": "I", "serv": 49250000}, {"cat": "J", "serv": 56400000}, {"cat": "K", "serv": 68000000}]}, {"id": "ene2025_jun2025", "vigDesde": "2025-01-01", "vigHasta": "2025-06-30", "label": "Ene 2025 – Jun 2025", "cats": [{"cat": "A", "serv": 7813729.17}, {"cat": "B", "serv": 11447583.05}, {"cat": "C", "serv": 16045879.06}, {"cat": "D", "serv": 19920753.81}, {"cat": "E", "serv": 23438187.51}, {"cat": "F", "serv": 29380938.78}, {"cat": "G", "serv": 35149584.2}, {"cat": "H", "serv": 53319671.9}, {"cat": "I", "serv": 59665694.39}, {"cat": "J", "serv": 68294898.17}, {"cat": "K", "serv": 82344065.87}]}, {"id": "jul2025_dic2025", "vigDesde": "2025-07-01", "vigHasta": "2025-12-31", "label": "Jul 2025 – Dic 2025", "cats": [{"cat": "A", "serv": 8566784.25}, {"cat": "B", "serv": 12547398.93}, {"cat": "C", "serv": 17593808.68}, {"cat": "D", "serv": 21836625.94}, {"cat": "E", "serv": 25697165.38}, {"cat": "F", "serv": 32208729.91}, {"cat": "G", "serv": 38521555.32}, {"cat": "H", "serv": 58444606.86}, {"cat": "I", "serv": 65374688.13}, {"cat": "J", "serv": 74863316.56}, {"cat": "K", "serv": 90241584.2}]}, {"id": "ene2026_jun2026", "vigDesde": "2026-01-01", "vigHasta": null, "label": "Ene 2026 – Jun 2026", "cats": [{"cat": "A", "serv": 10277988.13}, {"cat": "B", "serv": 15058447.71}, {"cat": "C", "serv": 21113696.52}, {"cat": "D", "serv": 26212853.42}, {"cat": "E", "serv": 30833964.37}, {"cat": "F", "serv": 38642048.36}, {"cat": "G", "serv": 46211109.37}, {"cat": "H", "serv": 70113407.33}, {"cat": "I", "serv": 78479211.62}, {"cat": "J", "serv": 89872640.3}, {"cat": "K", "serv": 108357084.05}]}];
+const FACTURAS_INICIAL = [{"id": "1", "fechaFac": "2025-01-19", "fechaDesde": "2025-01-01", "tipo": "FC", "nro": "0003-00000564", "cliente": "OSDE", "cuit": "", "monto": 667482.81}, {"id": "2", "fechaFac": "2025-01-19", "fechaDesde": "2025-01-01", "tipo": "FC", "nro": "0003-00000565", "cliente": "ASOC", "cuit": "", "monto": 916260.66}, {"id": "3", "fechaFac": "2025-01-19", "fechaDesde": "2025-01-01", "tipo": "FC", "nro": "0003-00000566", "cliente": "ASOC", "cuit": "", "monto": 877976.4}, {"id": "4", "fechaFac": "2025-01-19", "fechaDesde": "2025-01-01", "tipo": "FC", "nro": "0003-00000567", "cliente": "ASOC", "cuit": "", "monto": 839630.78}, {"id": "5", "fechaFac": "2025-02-13", "fechaDesde": "2025-02-01", "tipo": "FC", "nro": "0003-00000568", "cliente": "Particular", "cuit": "", "monto": 263257.0}, {"id": "6", "fechaFac": "2025-02-19", "fechaDesde": "2025-02-01", "tipo": "FC", "nro": "0003-00000569", "cliente": "Salud Publica", "cuit": "", "monto": 290100.0}, {"id": "7", "fechaFac": "2025-02-19", "fechaDesde": "2025-02-01", "tipo": "FC", "nro": "0003-00000570", "cliente": "Particular", "cuit": "", "monto": 25000.0}, {"id": "8", "fechaFac": "2025-02-27", "fechaDesde": "2025-02-01", "tipo": "FC", "nro": "0003-00000571", "cliente": "Salud Publica", "cuit": "", "monto": 290100.0}, {"id": "9", "fechaFac": "2025-02-27", "fechaDesde": "2025-01-01", "tipo": "FC", "nro": "0003-00000572", "cliente": "OSDE", "cuit": "", "monto": 1068500.42}, {"id": "10", "fechaFac": "2025-03-11", "fechaDesde": "2025-03-01", "tipo": "FC", "nro": "0003-00000573", "cliente": "Particular", "cuit": "", "monto": 290100.0}, {"id": "11", "fechaFac": "2025-03-23", "fechaDesde": "2025-02-01", "tipo": "FC", "nro": "0003-00000574", "cliente": "OSDE", "cuit": "", "monto": 767390.63}, {"id": "12", "fechaFac": "2025-03-29", "fechaDesde": "2025-02-01", "tipo": "FC", "nro": "0003-00000575", "cliente": "OSDE", "cuit": "", "monto": 743806.02}, {"id": "13", "fechaFac": "2025-03-31", "fechaDesde": "2025-02-01", "tipo": "FC", "nro": "0003-00000576", "cliente": "OSDE", "cuit": "", "monto": 337417.36}, {"id": "14", "fechaFac": "2025-04-01", "fechaDesde": "2025-04-01", "tipo": "FC", "nro": "0003-00000577", "cliente": "Particular", "cuit": "", "monto": 448700.0}, {"id": "15", "fechaFac": "2025-04-08", "fechaDesde": "2025-04-01", "tipo": "FC", "nro": "0003-00000578", "cliente": "Particular", "cuit": "", "monto": 150000.0}, {"id": "16", "fechaFac": "2025-04-10", "fechaDesde": "2025-04-01", "tipo": "FC", "nro": "0003-00000579", "cliente": "Particular", "cuit": "", "monto": 10000.0}, {"id": "17", "fechaFac": "2025-04-14", "fechaDesde": "2025-04-01", "tipo": "FC", "nro": "0003-00000580", "cliente": "Salud Publica", "cuit": "", "monto": 656400.0}, {"id": "18", "fechaFac": "2025-04-14", "fechaDesde": "2025-04-01", "tipo": "FC", "nro": "0003-00000581", "cliente": "Salud Publica", "cuit": "", "monto": 656400.0}, {"id": "19", "fechaFac": "2025-04-23", "fechaDesde": "2025-03-01", "tipo": "FC", "nro": "0003-00000582", "cliente": "OSDE", "cuit": "", "monto": 856591.52}, {"id": "20", "fechaFac": "2025-04-23", "fechaDesde": "2025-03-01", "tipo": "FC", "nro": "0003-00000583", "cliente": "OSDE", "cuit": "", "monto": 1076266.93}, {"id": "21", "fechaFac": "2025-04-23", "fechaDesde": "2025-04-01", "tipo": "FC", "nro": "0003-00000584", "cliente": "Particular", "cuit": "", "monto": 140000.0}, {"id": "22", "fechaFac": "2025-05-07", "fechaDesde": "2025-04-01", "tipo": "FC", "nro": "0003-00000585", "cliente": "OSDE", "cuit": "", "monto": 766884.73}, {"id": "23", "fechaFac": "2025-05-07", "fechaDesde": "2025-05-01", "tipo": "FC", "nro": "0003-00000586", "cliente": "Salud Publica", "cuit": "", "monto": 656400.0}, {"id": "24", "fechaFac": "2025-05-08", "fechaDesde": "2025-05-01", "tipo": "FC", "nro": "0003-00000587", "cliente": "Particular", "cuit": "", "monto": 10000.0}, {"id": "25", "fechaFac": "2025-05-08", "fechaDesde": "2025-05-01", "tipo": "FC", "nro": "0003-00000588", "cliente": "Particular", "cuit": "", "monto": 10000.0}, {"id": "26", "fechaFac": "2025-05-21", "fechaDesde": "2025-05-01", "tipo": "FC", "nro": "0003-00000589", "cliente": "Salud Publica", "cuit": "", "monto": 361900.0}, {"id": "27", "fechaFac": "2025-05-23", "fechaDesde": "2025-05-01", "tipo": "FC", "nro": "0003-00000590", "cliente": "Salud Publica", "cuit": "", "monto": 674300.0}, {"id": "28", "fechaFac": "2025-05-30", "fechaDesde": "2025-05-01", "tipo": "FC", "nro": "0003-00000591", "cliente": "Camioneros", "cuit": "", "monto": 130100.0}, {"id": "29", "fechaFac": "2025-06-13", "fechaDesde": "2025-06-01", "tipo": "NC", "nro": "0003-00000017", "cliente": "Salud Publica", "cuit": "", "monto": -361900.0}, {"id": "30", "fechaFac": "2025-06-13", "fechaDesde": "2025-06-01", "tipo": "FC", "nro": "0003-00000592", "cliente": "Salud Publica", "cuit": "", "monto": 361900.0}, {"id": "31", "fechaFac": "2025-06-13", "fechaDesde": "2025-06-01", "tipo": "FC", "nro": "0003-00000593", "cliente": "Salud Publica", "cuit": "", "monto": 361900.0}, {"id": "32", "fechaFac": "2025-06-18", "fechaDesde": "2025-06-01", "tipo": "FC", "nro": "0003-00000594", "cliente": "Salud Publica", "cuit": "", "monto": 674300.0}, {"id": "33", "fechaFac": "2025-06-25", "fechaDesde": "2025-06-01", "tipo": "FC", "nro": "0003-00000595", "cliente": "Salud Publica", "cuit": "", "monto": 148400.0}, {"id": "34", "fechaFac": "2025-07-01", "fechaDesde": "2025-07-01", "tipo": "NC", "nro": "0003-00000018", "cliente": "ASOC", "cuit": "", "monto": -122665.16}, {"id": "35", "fechaFac": "2025-07-01", "fechaDesde": "2025-07-01", "tipo": "FC", "nro": "0003-00000596", "cliente": "ASOC", "cuit": "", "monto": 1798517.38}, {"id": "36", "fechaFac": "2025-07-01", "fechaDesde": "2025-07-01", "tipo": "FC", "nro": "0003-00000597", "cliente": "ASOC", "cuit": "", "monto": 122665.16}, {"id": "37", "fechaFac": "2025-07-01", "fechaDesde": "2025-07-01", "tipo": "FC", "nro": "0003-00000598", "cliente": "ASOC", "cuit": "", "monto": 122665.16}, {"id": "38", "fechaFac": "2025-07-01", "fechaDesde": "2025-07-01", "tipo": "FC", "nro": "0003-00000599", "cliente": "ASOC", "cuit": "", "monto": 1657974.95}, {"id": "39", "fechaFac": "2025-07-01", "fechaDesde": "2025-07-01", "tipo": "FC", "nro": "0003-00000600", "cliente": "ASOC", "cuit": "", "monto": 1481277.49}, {"id": "40", "fechaFac": "2025-07-01", "fechaDesde": "2025-07-01", "tipo": "FC", "nro": "0003-00000601", "cliente": "ASOC", "cuit": "", "monto": 1805964.36}, {"id": "41", "fechaFac": "2025-07-01", "fechaDesde": "2025-07-01", "tipo": "FC", "nro": "0003-00000602", "cliente": "ASOC", "cuit": "", "monto": 44138.06}, {"id": "42", "fechaFac": "2025-07-16", "fechaDesde": "2025-07-01", "tipo": "FC", "nro": "0003-00000603", "cliente": "Salud Publica", "cuit": "", "monto": 312400.0}, {"id": "43", "fechaFac": "2025-07-19", "fechaDesde": "2025-07-01", "tipo": "FC", "nro": "0003-00000604", "cliente": "OSDE", "cuit": "", "monto": 1593202.19}, {"id": "44", "fechaFac": "2025-07-21", "fechaDesde": "2025-07-01", "tipo": "FC", "nro": "0003-00000605", "cliente": "OSDE", "cuit": "", "monto": 1927969.33}, {"id": "45", "fechaFac": "2025-08-05", "fechaDesde": "2025-08-01", "tipo": "FC", "nro": "0003-00000606", "cliente": "CAMIONEROS", "cuit": "", "monto": 140500.0}, {"id": "46", "fechaFac": "2025-08-08", "fechaDesde": "2025-07-01", "tipo": "FC", "nro": "0003-00000607", "cliente": "OSDE", "cuit": "", "monto": 1597833.67}, {"id": "47", "fechaFac": "2025-08-13", "fechaDesde": "2025-07-01", "tipo": "FC", "nro": "0003-00000608", "cliente": "OMIP", "cuit": "", "monto": 130100.0}, {"id": "48", "fechaFac": "2025-08-28", "fechaDesde": "2025-08-01", "tipo": "FC", "nro": "0003-00000609", "cliente": "Salud Publica", "cuit": "", "monto": 460400.0}, {"id": "49", "fechaFac": "2025-09-09", "fechaDesde": "2025-08-01", "tipo": "FC", "nro": "0003-00000610", "cliente": "OSDE", "cuit": "", "monto": 3423654.01}, {"id": "50", "fechaFac": "2025-09-10", "fechaDesde": "2025-09-01", "tipo": "FC", "nro": "0003-00000611", "cliente": "ASOC", "cuit": "", "monto": 1344116.36}, {"id": "51", "fechaFac": "2025-09-10", "fechaDesde": "2025-09-01", "tipo": "FC", "nro": "0003-00000612", "cliente": "ASOC", "cuit": "", "monto": 804534.14}, {"id": "52", "fechaFac": "2025-09-15", "fechaDesde": "2025-09-15", "tipo": "FC", "nro": "0003-00000613", "cliente": "OSDE", "cuit": "", "monto": 23967.51}, {"id": "53", "fechaFac": "2025-09-16", "fechaDesde": "2025-09-16", "tipo": "FC", "nro": "0003-00000614", "cliente": "Salud Publica", "cuit": "", "monto": 460400.0}, {"id": "54", "fechaFac": "2025-10-02", "fechaDesde": "2025-10-02", "tipo": "FC", "nro": "0003-00000615", "cliente": "Salud Publica", "cuit": "", "monto": 358400.0}, {"id": "55", "fechaFac": "2025-10-02", "fechaDesde": "2025-09-29", "tipo": "FC", "nro": "0003-00000616", "cliente": "Particular", "cuit": "", "monto": 40000.0}, {"id": "56", "fechaFac": "2025-11-16", "fechaDesde": "2025-09-01", "tipo": "FC", "nro": "0003-00000617", "cliente": "OSDE", "cuit": "", "monto": 1310567.79}, {"id": "57", "fechaFac": "2025-11-19", "fechaDesde": "2025-11-04", "tipo": "FC", "nro": "0003-00000618", "cliente": "CAMIONEROS", "cuit": "", "monto": 650000.0}, {"id": "58", "fechaFac": "2025-11-19", "fechaDesde": "2025-11-04", "tipo": "FC", "nro": "0003-00000619", "cliente": "CAMIONEROS", "cuit": "", "monto": 380000.0}, {"id": "59", "fechaFac": "2025-11-20", "fechaDesde": "2025-11-04", "tipo": "FC", "nro": "0003-00000620", "cliente": "CAMIONEROS", "cuit": "", "monto": 175200.0}, {"id": "60", "fechaFac": "2025-11-27", "fechaDesde": "2025-05-07", "tipo": "NC", "nro": "0003-00000019", "cliente": "Salud Publica", "cuit": "", "monto": -656400.0}, {"id": "61", "fechaFac": "2025-12-05", "fechaDesde": "2025-11-01", "tipo": "FC", "nro": "0003-00000621", "cliente": "OSDE", "cuit": "", "monto": 682662.67}, {"id": "62", "fechaFac": "2025-12-11", "fechaDesde": "2025-10-01", "tipo": "FC", "nro": "0003-00000622", "cliente": "OSDE", "cuit": "", "monto": 1206877.42}, {"id": "63", "fechaFac": "2025-12-11", "fechaDesde": "2025-12-02", "tipo": "FC", "nro": "0003-00000623", "cliente": "PAMI", "cuit": "", "monto": 450900.0}, {"id": "64", "fechaFac": "2025-12-12", "fechaDesde": "2025-12-12", "tipo": "FC", "nro": "0003-00000624", "cliente": "Salud Publica", "cuit": "", "monto": 909800.0}, {"id": "65", "fechaFac": "2025-12-12", "fechaDesde": "2025-12-02", "tipo": "FC", "nro": "0003-00000625", "cliente": "CAMIONEROS", "cuit": "", "monto": 160500.0}, {"id": "66", "fechaFac": "2025-12-12", "fechaDesde": "2025-12-02", "tipo": "FC", "nro": "0003-00000626", "cliente": "CAMIONEROS", "cuit": "", "monto": 450800.0}, {"id": "67", "fechaFac": "2025-12-16", "fechaDesde": "2025-12-16", "tipo": "FC", "nro": "0003-00000627", "cliente": "Particular", "cuit": "", "monto": 175400.0}, {"id": "68", "fechaFac": "2026-01-21", "fechaDesde": "2026-01-21", "tipo": "FC", "nro": "0003-00000628", "cliente": "Particular", "cuit": "", "monto": 40000.0}, {"id": "69", "fechaFac": "2026-01-30", "fechaDesde": "2025-12-01", "tipo": "FC", "nro": "0003-00000629", "cliente": "OSDE", "cuit": "", "monto": 1722144.07}, {"id": "70", "fechaFac": "2026-01-30", "fechaDesde": "2025-12-01", "tipo": "FC", "nro": "0003-00000630", "cliente": "OSDE", "cuit": "", "monto": 946913.43}, {"id": "71", "fechaFac": "2026-01-30", "fechaDesde": "2026-01-21", "tipo": "FC", "nro": "0003-00000631", "cliente": "Particular", "cuit": "", "monto": 195000.0}, {"id": "72", "fechaFac": "2026-02-10", "fechaDesde": "2026-02-10", "tipo": "FC", "nro": "0003-00000632", "cliente": "Salud Publica", "cuit": "", "monto": 725400.0}, {"id": "73", "fechaFac": "2026-03-02", "fechaDesde": "2026-03-02", "tipo": "FC", "nro": "0003-00000633", "cliente": "Salud Publica", "cuit": "", "monto": 410900.0}, {"id": "74", "fechaFac": "2026-03-03", "fechaDesde": "2026-03-03", "tipo": "FC", "nro": "0003-00000634", "cliente": "Particular", "cuit": "", "monto": 200000.0}, {"id": "75", "fechaFac": "2026-03-10", "fechaDesde": "2026-03-10", "tipo": "FC", "nro": "0003-00000635", "cliente": "Particular", "cuit": "", "monto": 410900.0}, {"id": "76", "fechaFac": "2026-03-10", "fechaDesde": "2026-03-10", "tipo": "FC", "nro": "0003-00000636", "cliente": "Particular", "cuit": "", "monto": 260000.0}, {"id": "77", "fechaFac": "2026-03-10", "fechaDesde": "2026-03-10", "tipo": "FC", "nro": "0003-00000637", "cliente": "PAMI", "cuit": "", "monto": 450900.0}, {"id": "78", "fechaFac": "2026-03-18", "fechaDesde": "2026-03-18", "tipo": "FC", "nro": "0003-00000638", "cliente": "Salud Publica", "cuit": "", "monto": 684400.0}, {"id": "79", "fechaFac": "2026-03-18", "fechaDesde": "2026-03-18", "tipo": "FC", "nro": "0003-00000639", "cliente": "Salud Publica", "cuit": "", "monto": 684400.0}, {"id": "80", "fechaFac": "2026-03-20", "fechaDesde": "2026-03-20", "tipo": "FC", "nro": "0003-00000640", "cliente": "Salud Publica", "cuit": "", "monto": 410900.0}, {"id": "81", "fechaFac": "2026-03-23", "fechaDesde": "2026-01-01", "tipo": "FC", "nro": "0003-00000641", "cliente": "ASOC", "cuit": "", "monto": 1460766.2}, {"id": "82", "fechaFac": "2026-03-23", "fechaDesde": "2026-02-01", "tipo": "FC", "nro": "0003-00000642", "cliente": "ASOC", "cuit": "", "monto": 358407.51}, {"id": "83", "fechaFac": "2026-03-23", "fechaDesde": "2026-02-01", "tipo": "FC", "nro": "0003-00000643", "cliente": "ASOC", "cuit": "", "monto": 405298.99}];
+
+// ── INIT ──────────────────────────────────────────────────
+(function init() {
+  // Version tag — bump this when HIST_DEFAULT changes to force a reset of stale localStorage
+  const HIST_VERSION = 'v5_ene2026';
+  if (!localStorage.getItem('mono_facturas') || JSON.parse(localStorage.getItem('mono_facturas')).length===0)
+    localStorage.setItem('mono_facturas', JSON.stringify(FACTURAS_INICIAL));
+  // Always reset hist if version tag is outdated or missing
+  if (localStorage.getItem('mono_hist_version') !== HIST_VERSION) {
+    localStorage.setItem('mono_hist', JSON.stringify(HIST_DEFAULT));
+    localStorage.setItem('mono_hist_version', HIST_VERSION);
+  }
+})();
+
+const getF  = () => JSON.parse(localStorage.getItem('mono_facturas')||'[]');
+const getH  = () => JSON.parse(localStorage.getItem('mono_hist')||'[]');
+const setF  = v => localStorage.setItem('mono_facturas', JSON.stringify(v));
+const setH  = v => localStorage.setItem('mono_hist', JSON.stringify(v));
+
+
+// ── UTILS ──────────────────────────────────────────────────
+const fmt   = n => '$' + Math.round(n).toLocaleString('es-AR');
+const fmtAb = n => '$' + Math.round(Math.abs(n)).toLocaleString('es-AR');
+const ym    = d => d.slice(0,7);
+const ef    = f => f.tipo==='NC' ? -Math.abs(f.monto) : Math.abs(f.monto);
+
+function today() {
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function fmtDate(s){if(!s)return'—';const[y,m,d]=s.split('-');return`${d}/${m}/${y}`;}
+function monthLabel(k){const[y,m]=k.split('-');return new Date(+y,+m-1,1).toLocaleDateString('es-AR',{month:'short',year:'numeric'});}
+
+// Topes vigentes para una fecha YYYY-MM-DD
+// Los períodos rigen Ene-Jun y Jul-Dic
+function catsForDate(dateStr) {
+  const hist = getH().sort((a,b)=>b.vigDesde.localeCompare(a.vigDesde));
+  for (const p of hist) {
+    if (dateStr >= p.vigDesde && (!p.vigHasta || dateStr <= p.vigHasta)) return p.cats;
+  }
+  return hist[0]?.cats || [];
+}
+
+// Topes vigentes en el MOMENTO DEL CORTE:
+// - Corte de ENERO (recategorización de Enero): usa topes que empiezan en Enero de ese año
+//   (o sea los topes Ene-Jun de ese año)
+// - Corte de JULIO (recategorización de Julio): usa topes que empiezan en Julio de ese año
+//   (o sea los topes Jul-Dic de ese año)
+// La recategorización usa los topes del semestre que EMPIEZA con la recategorización
+function catsForRecatDate(recatMonth, recatYear) {
+  // recatMonth: 1=Enero, 7=Julio
+  const dateStr = `${recatYear}-${String(recatMonth).padStart(2,'0')}-01`;
+  return catsForDate(dateStr);
+}
+
+function catsVigentes() { return catsForDate(today()); }
+
+function catIdx(amount, cats) {
+  if (!cats || !cats.length) return 0;
+  for (let i=0; i<cats.length; i++) if (amount <= cats[i].serv) return i;
+  return cats.length;
+}
+function catName(i, cats) { return i<cats.length ? 'Categoría '+cats[i].cat : 'Fuera de régimen'; }
+function catColor(cat) { return CAT_COLORS[cat]||'#888'; }
+
+function buildMonthly() {
+  const m={};
+  getF().forEach(f=>{const k=ym(f.fechaDesde);m[k]=(m[k]||0)+ef(f);});
+  return m;
+}
+
+function acum12(monthly, endKey) {
+  const [ey,em]=endKey.split('-').map(Number);
+  let t=0;
+  for(let i=0;i<12;i++){let m=em-i,y=ey;if(m<=0){m+=12;y--;}t+=(monthly[`${y}-${String(m).padStart(2,'0')}`]||0);}
+  return t;
+}
+
+function allMonths(monthly) {
+  const keys=Object.keys(monthly).sort();
+  if(!keys.length)return[];
+  const now=new Date();
+  const tk=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const months=[];
+  let[cy,cm]=keys[0].split('-').map(Number);
+  const[ty,tm]=tk.split('-').map(Number);
+  while(cy<ty||(cy===ty&&cm<=tm)){months.push(`${cy}-${String(cm).padStart(2,'0')}`);if(++cm>12){cm=1;cy++;}}
+  return months;
+}
+
+// ── LÓGICA DE CORTES ──────────────────────────────────────
+// Corte de ENERO: se hace en Enero. El acumulado es Ene-Dic del año anterior.
+//   Los topes que se aplican son los publicados en Enero (rigen Ene-Jun).
+// Corte de JULIO: se hace en Julio. El acumulado es Jul-Jun (año anterior a año actual).
+//   Los topes que se aplican son los publicados en Julio (rigen Jul-Dic).
+//
+// endKey del acumulado:
+//   - Enero YYYY: acumulado termina en Dic(YYYY-1), endKey = YYYY-1-12
+//   - Julio YYYY: acumulado termina en Jun(YYYY), endKey = YYYY-06
+//
+// recatYear/Month: mes/año de la recategorización (para buscar topes)
+
+function calcCortes() {
+  const now=new Date(), ny=now.getFullYear(), nm=now.getMonth()+1;
+  const cortes=[];
+  for(let y=ny-2;y<=ny+2;y++){
+    // Corte de Enero y: acum Ene(y-1)-Dic(y-1), topes Ene(y)-Jun(y)
+    cortes.push({
+      endKey:`${y-1}-12`, recatM:1, recatY:y,
+      tipo:'ene', label:`Enero ${y}`, per:`Ene ${y-1} – Dic ${y-1}`,
+      topesLabel:`Ene ${y} – Jun ${y}`
+    });
+    // Corte de Julio y: acum Jul(y-1)-Jun(y), topes Jul(y)-Dic(y)
+    cortes.push({
+      endKey:`${y}-06`, recatM:7, recatY:y,
+      tipo:'jul', label:`Julio ${y}`, per:`Jul ${y-1} – Jun ${y}`,
+      topesLabel:`Jul ${y} – Dic ${y}`
+    });
+  }
+  cortes.sort((a,b)=>a.endKey!==b.endKey?a.endKey.localeCompare(b.endKey):a.recatM-b.recatM);
+
+  // "ya ocurrió" = el mes del corte ya pasó
+  // Enero y ocurrió si nm > 1 || ny > y (o sea si ya estamos en Febrero o después del año y)
+  // Julio y ocurrió si nm > 7 || ny > y
+  function yaOcurrio(c) {
+    if (ny > c.recatY) return true;
+    if (ny < c.recatY) return false;
+    return nm > c.recatM;
+  }
+
+  const pasados = cortes.filter(yaOcurrio);
+  const futuros = cortes.filter(c => !yaOcurrio(c));
+  return {
+    actual: pasados.length ? pasados[pasados.length-1] : null,
+    prox1:  futuros[0]||null,
+    prox2:  futuros[1]||null,
+    nowKey: `${ny}-${String(nm).padStart(2,'0')}`
+  };
+}
+
+function mesesRestantes(endKey, nowKey) {
+  const[ey,em]=endKey.split('-').map(Number);
+  const[ny,nm]=nowKey.split('-').map(Number);
+  return Math.max(0,(ey-ny)*12+(em-nm));
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────
+function renderDashboard() {
+  const monthly=buildMonthly(), cortes=calcCortes();
+  const {actual, prox1, prox2} = cortes;
+  const ipc = parseFloat(document.getElementById('ipc-input').value)||15;
+  const factor = 1 + ipc/100;
+
+  // Categoría actual: topes del semestre que inicia con la recategorización
+  const aActual = actual ? acum12(monthly, actual.endKey) : 0;
+  const cActual = actual ? catsForRecatDate(actual.recatM, actual.recatY) : catsVigentes();
+  const iActual = catIdx(aActual, cActual);
+  const catObj  = iActual < cActual.length ? cActual[iActual] : null;
+
+  document.getElementById('badge-cat').style.background = catObj ? catColor(catObj.cat) : '#888';
+  document.getElementById('badge-cat').textContent = catObj ? catObj.cat : '!';
+  document.getElementById('dash-cat').textContent   = catName(iActual, cActual);
+  document.getElementById('dash-cat-max').textContent = catObj
+    ? `Acum. ${fmt(aActual)} · Tope ${fmt(catObj.serv)}`
+    : 'Fuera de régimen';
+  document.getElementById('cat-origen').textContent = actual ? `(corte ${actual.label})` : '';
+
+  // Próximos cortes
+  function proxStat(corte, elVal, elSub, elLbl) {
+    if (!corte) return;
+    const cats = catsForRecatDate(corte.recatM, corte.recatY);
+    const a    = acum12(monthly, corte.endKey);
+    const i    = catIdx(a, cats);
+    document.getElementById(elLbl).textContent = `Acum. parcial – ${corte.label}`;
+    document.getElementById(elVal).textContent = fmt(a);
+    document.getElementById(elSub).textContent = `${catName(i, cats)} · ${corte.per}`;
+  }
+  proxStat(prox1, 'dash-prox1', 'sub-prox1', 'lbl-prox1');
+  proxStat(prox2, 'dash-prox2', 'sub-prox2', 'lbl-prox2');
+
+  // Barra de progreso (categoría actual)
+  const prevLim = iActual>0 ? cActual[iActual-1].serv : 0;
+  const currLim = catObj ? catObj.serv : (cActual.length ? cActual[cActual.length-1].serv : 1);
+  const pct = Math.min(100, Math.round((aActual-prevLim)/Math.max(1,currLim-prevLim)*100));
+  const fill = document.getElementById('prog-fill');
+  fill.style.width = pct+'%'; fill.style.background = catObj ? catColor(catObj.cat) : '#888';
+  document.getElementById('prog-title').textContent = `Progreso en ${catName(iActual,cActual)} — corte ${actual?actual.label:'—'}`;
+  document.getElementById('prog-desde').textContent = fmt(prevLim);
+  document.getElementById('prog-pct').textContent   = pct+'%';
+  document.getElementById('prog-hasta').textContent = fmt(currLim)+' (límite)';
+
+  // PROYECCIÓN DOBLE para el próximo corte
+  const container = document.getElementById('proy-container');
+  container.innerHTML = '';
+  if (prox1) {
+    const cats0  = catsForRecatDate(prox1.recatM, prox1.recatY); // topes sin actualizar
+    const catsIPC = cats0.map(c => ({...c, serv: c.serv * factor}));           // topes con IPC
+    const a      = acum12(monthly, prox1.endKey);
+    const mFalt  = mesesRestantes(prox1.endKey, cortes.nowKey);
+
+    function buildProyCard(cats, esIPC, clsBase) {
+      const i     = catIdx(a, cats);
+      const nextT = i+1 < cats.length ? cats[i+1].serv : null;
+      if (!nextT) return `<div class="pc pd"><div class="pl">${esIPC?'Con IPC':'Sin actualización'}</div><div class="pv" style="font-size:14px">Categoría máxima</div></div>`;
+      const margen = nextT - a;
+      if (mFalt === 0) {
+        const cls = margen<0?'pd':'pw';
+        return `<div class="pc ${cls}"><div class="pl">${esIPC?'Con IPC (+'+ipc+'%)':'Sin actualización'}</div><div class="pv" style="font-size:15px">${fmt(margen)}</div><div class="ps">Margen final · cat. ${cats[i].cat}</div></div>`;
+      }
+      const prom = margen/mFalt;
+      const cls  = prom<0?'pd':prom<1000000?'pw':clsBase;
+      return `<div class="pc ${cls}">
+        <div class="pl">${esIPC?'Con actualización IPC (+'+ipc+'%)':'Sin actualización de topes'}</div>
+        <div class="pv">${fmt(prom)}<span style="font-size:12px;font-weight:400">/mes</span></div>
+        <div class="ps">
+          Cat. vigente: <strong>${cats[i].cat}</strong> ·
+          Tope ${esIPC?'est. ':''}cat. ${cats[i].cat}: ${fmt(cats[i].serv)} ·
+          Tope ${esIPC?'est. ':''}cat. sig. (${cats[i+1].cat}): ${fmt(nextT)}<br>
+          Margen hasta cat. ${cats[i+1].cat}: ${fmt(margen)} · ${mFalt} mes${mFalt!==1?'es':''} restante${mFalt!==1?'s':''}
+        </div>
+      </div>`;
+    }
+
+    const wrap = document.createElement('div');
+    wrap.innerHTML = `
+      <div class="pg-header">📅 ${prox1.label} · ${prox1.per} · Topes: ${prox1.topesLabel}</div>
+      <div class="pg2">
+        ${buildProyCard(cats0,  false, 'pj')}
+        ${buildProyCard(catsIPC, true, 'pe')}
+      </div>`;
+    container.appendChild(wrap);
+  } else {
+    container.innerHTML = '<div class="pc pw"><div class="pl">Sin datos</div><div class="pv">—</div></div>';
+  }
+
+  // Tarjetas de corte
+  function fillCard(prefix, corte, a, cats) {
+    if (!corte) return;
+    const i = catIdx(a, cats);
+    document.getElementById(prefix+'-title').textContent = prefix==='rj'
+      ? `Último corte ✓ ${corte.label}` : `Próximo corte — ${corte.label}`;
+    const el = document.getElementById(prefix+'-cat');
+    el.textContent = catName(i, cats);
+    el.style.color = i<cats.length ? catColor(cats[i].cat) : '#c03030';
+    document.getElementById(prefix+'-per').textContent   = corte.per;
+    document.getElementById(prefix+'-topes').textContent = corte.topesLabel;
+    document.getElementById(prefix+'-acum').textContent  = fmt(a);
+    const prevL = i>0 ? cats[i-1].serv : 0;
+    const nextL = i+1 < cats.length ? cats[i+1].serv : null;
+    document.getElementById(prefix+'-exceso').textContent = i>0 ? fmt(a-prevL)+' sobre cat. '+cats[i-1].cat : '—';
+    const fa = document.getElementById(prefix+'-falta');
+    if (nextL) {
+      fa.textContent = fmt(nextL-a)+' para cat. '+cats[i+1].cat;
+      fa.className   = 'iv '+((nextL-a)<a*0.15?'warn':'ok');
+    } else { fa.textContent='Categoría máxima'; fa.className='iv danger'; }
+  }
+  fillCard('rj', actual, aActual, cActual);
+  if (prox1) {
+    const cp = catsForRecatDate(prox1.recatM, prox1.recatY);
+    fillCard('re', prox1, acum12(monthly, prox1.endKey), cp);
+  }
+
+  // Últimos 6 meses
+  const months = allMonths(monthly).slice(-6);
+  const tbody  = document.getElementById('dash-monthly');
+  tbody.innerHTML = '';
+  months.forEach(k => {
+    const[,m] = k.split('-').map(Number);
+    const v   = monthly[k]||0;
+    const a12 = acum12(monthly,k);
+    // Para la categoría histórica del mes: usar topes vigentes en ese mes
+    const c12 = catsForDate(k+'-15');
+    const i12 = catIdx(a12, c12);
+    const tope = i12<c12.length ? c12[i12].serv : null;
+    const mar  = tope !== null ? tope-a12 : null;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="text-transform:capitalize">${monthLabel(k)}</td>
+      <td class="r ${v<0?'neg':''}">${fmt(v)}</td>
+      <td class="r">${fmt(a12)}</td>
+      <td><span style="font-weight:700;color:${i12<c12.length?catColor(c12[i12].cat):'#c03030'}">${i12<c12.length?c12[i12].cat:'!'}</span> <span class="muted">${catName(i12,c12)}</span></td>
+      <td class="r">${tope!==null?fmt(tope):'—'}</td>
+      <td class="r">${mar!==null?`<span class="${mar<0?'danger':mar<a12*.1?'warn':''}">${fmt(mar)}</span>`:'—'}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ── FACTURAS ──────────────────────────────────────────────
+function renderFacturas() {
+  const tbody=document.getElementById('facturas-tbody'), empty=document.getElementById('facturas-empty');
+  tbody.innerHTML='';
+  const sorted=[...getF()].sort((a,b)=>b.fechaDesde.localeCompare(a.fechaDesde));
+  empty.style.display=sorted.length?'none':'block';
+  sorted.forEach(f=>{
+    const e=ef(f), cls=f.tipo==='NC'?'tnc':f.tipo==='MI'?'tmi':'tfc';
+    const lbl=f.tipo==='NC'?'Nota Créd. C':f.tipo==='MI'?'MIPYME C':'Factura C';
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td class="muted">${f.nro||'—'}</td><td>${fmtDate(f.fechaFac)}</td><td>${fmtDate(f.fechaDesde)}</td>
+      <td><span class="tipo ${cls}">${lbl}</span></td><td>${f.cliente||'—'}</td><td class="muted">${f.cuit||'—'}</td>
+      <td class="r ${e<0?'neg':''}">${e<0?'-':''}${fmtAb(e)}</td>
+      <td><div class="acts"><button class="btn btn-sm btn-edit" onclick="openModal('${f.id}')">Editar</button><button class="btn btn-sm btn-del" onclick="delFactura('${f.id}')">Eliminar</button></div></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ── MENSUAL ───────────────────────────────────────────────
+function renderMensual() {
+  const monthly=buildMonthly(), months=allMonths(monthly), cortes=calcCortes();
+  const tbody=document.getElementById('mensual-tbody'), empty=document.getElementById('mensual-empty');
+  tbody.innerHTML=''; empty.style.display=months.length?'none':'block';
+  let prevIdx=null;
+  [...months].reverse().forEach(k=>{
+    const[,m]=k.split('-').map(Number);
+    const v=monthly[k]||0, a12=acum12(monthly,k);
+    const cats=catsForDate(k+'-15');
+    const idx=catIdx(a12,cats);
+    const tope=idx<cats.length?cats[idx].serv:null;
+    const mar=tope!==null?tope-a12:null;
+    const isJun=m===6, isDic=m===12;
+    const isActCorte=cortes.actual&&k===cortes.actual.endKey;
+    const changed=prevIdx!==null&&idx!==prevIdx; prevIdx=idx;
+    const tr=document.createElement('tr');
+    if(isJun)tr.className='jul-row'; if(isDic)tr.className='ene-row';
+    const rb=isJun?`<span class="badge bj">Corte Julio</span>`:isDic?`<span class="badge be">Corte Enero</span>`:'';
+    const rc=isActCorte?`<span class="badge bc">Cat. actual</span>`:'';
+    const cc=`<span style="font-weight:700;color:${idx<cats.length?catColor(cats[idx].cat):'#c03030'}">${idx<cats.length?cats[idx].cat:'!'}</span>`
+            +(changed?` <span style="color:#c03030;font-size:10px">▲</span>`:'')
+            +` <span class="muted">${catName(idx,cats)}</span>`;
+    const mc=mar===null?'—':`<span class="${mar<0?'danger':mar<a12*.1?'warn':''}">${fmt(mar)}</span>`;
+    tr.innerHTML=`<td style="text-transform:capitalize">${monthLabel(k)}${rb}${rc}</td>
+      <td class="r ${v<0?'neg':''}">${fmt(v)}</td><td class="r">${fmt(a12)}</td>
+      <td>${cc}</td><td class="r">${tope!==null?fmt(tope):'—'}</td><td class="r">${mc}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ── CATEGORIAS ─────────────────────────────────────────────
+function renderCats() {
+  const ipc=parseFloat(document.getElementById('ipc-input').value)||15;
+  const factor=1+ipc/100;
+  const hist=getH().sort((a,b)=>b.vigDesde.localeCompare(a.vigDesde));
+  const vigente=hist[0];
+
+  // Fecha estimada próxima actualización
+  const vd=new Date(vigente.vigDesde);
+  const nextM=vd.getMonth()<6?'Julio':'Enero';
+  const nextY=vd.getMonth()<6?vd.getFullYear():vd.getFullYear()+1;
+  document.getElementById('th-proj').textContent=`Estimado ${nextM} ${nextY} (+${ipc}% IPC)`;
+  document.getElementById('vig-label').textContent=vigente.label;
+
+  // Tabla vigente
+  const monthly=buildMonthly(), cortes=calcCortes();
+  const aActual=cortes.actual?acum12(monthly,cortes.actual.endKey):0;
+  const cActual=cortes.actual?catsForRecatDate(cortes.actual.recatM,cortes.actual.recatY):vigente.cats;
+  const iActual=catIdx(aActual,cActual);
+  const tbody=document.getElementById('cat-vigente-tbody');
+  tbody.innerHTML='';
+  vigente.cats.forEach((c,i)=>{
+    const isAct=cActual[i]&&cActual[i].cat===c.cat&&i===iActual;
+    const tr=document.createElement('tr');
+    if(isAct)tr.style.background='#eff6ff';
+    tr.innerHTML=`<td><span style="font-size:17px;font-weight:800;color:${catColor(c.cat)}">${c.cat}</span>${isAct?'<span class="badge bj" style="margin-left:5px">Actual</span>':''}</td>
+      <td class="r">${fmt(c.serv)}</td>
+      <td class="r" style="color:#15803d;font-weight:600">${fmt(c.serv*factor)}</td>`;
+    tbody.appendChild(tr);
+  });
+
+  // Historial colapsable
+  const hc=document.getElementById('hist-container'); hc.innerHTML='';
+  hist.slice(1).forEach((p,pi)=>{
+    const newer=hist[pi];
+    let ipcBadge='';
+    if(newer&&newer.cats&&p.cats){
+      const ratios=p.cats.map((c,i)=>newer.cats[i]?newer.cats[i].serv/c.serv:null).filter(Boolean);
+      if(ratios.length){const avg=ratios.reduce((a,b)=>a+b,0)/ratios.length;ipcBadge=`<span class="ipc-badge">+${((avg-1)*100).toFixed(1)}% IPC</span>`;}
+    }
+    const div=document.createElement('div'); div.className='hist-period';
+    div.innerHTML=`<div class="hist-hdr" onclick="toggleHist(this)">
+      <h4>${p.label}${ipcBadge}</h4>
+      <span class="hist-meta">${p.vigDesde} → ${p.vigHasta||'vigente'} &nbsp;▾</span>
+    </div>
+    <div class="hist-body" style="max-height:0;overflow:hidden">
+      <div class="tw" style="border:none;border-radius:0">
+        <table><thead><tr><th>Cat.</th><th class="r">Tope servicios</th></tr></thead>
+        <tbody>${p.cats.map(c=>`<tr><td><span style="font-weight:800;color:${catColor(c.cat)}">${c.cat}</span></td><td class="r">${fmt(c.serv)}</td></tr>`).join('')}</tbody></table>
+      </div>
+    </div>`;
+    hc.appendChild(div);
+  });
+}
+
+function toggleHist(hdr){
+  const body=hdr.nextElementSibling;
+  const open=body.style.maxHeight&&body.style.maxHeight!=='0px';
+  body.style.maxHeight=open?'0':body.scrollHeight+'px';
+  hdr.querySelector('.hist-meta').innerHTML=hdr.querySelector('.hist-meta').innerHTML.replace(open?'▴':'▾',open?'▾':'▴');
+}
+
+// ── ACTUALIZAR TOPES ───────────────────────────────────────
+function openUpdateLimits(){
+  const hist=getH().sort((a,b)=>b.vigDesde.localeCompare(a.vigDesde));
+  const vig=hist[0];
+  const ipc=parseFloat(document.getElementById('ipc-input').value)||15;
+  const factor=1+ipc/100;
+  document.getElementById('upd-desde').value='';
+  document.getElementById('upd-hasta').value='';
+  document.getElementById('upd-label').value='';
+  const grid=document.getElementById('upd-grid');
+  while(grid.children.length>2)grid.removeChild(grid.lastChild);
+  vig.cats.forEach(c=>{
+    const lbl=document.createElement('div');
+    lbl.innerHTML=`<span style="font-weight:800;color:${catColor(c.cat)};font-size:15px">${c.cat}</span>`;
+    const inp=document.createElement('input');
+    inp.className='upd-inp';inp.type='number';inp.dataset.cat=c.cat;
+    inp.value=Math.round(c.serv*factor);
+    grid.appendChild(lbl);grid.appendChild(inp);
+  });
+  document.getElementById('upd-overlay').classList.add('open');
+}
+function closeUpdateLimits(){document.getElementById('upd-overlay').classList.remove('open');}
+function saveUpdateLimits(){
+  const desde=document.getElementById('upd-desde').value;
+  const hasta=document.getElementById('upd-hasta').value;
+  const label=document.getElementById('upd-label').value.trim();
+  if(!desde||!label){alert('Completá la fecha de inicio y la etiqueta.');return;}
+  const cats=[];
+  document.querySelectorAll('#upd-grid input[data-cat]').forEach(inp=>{
+    cats.push({cat:inp.dataset.cat,serv:parseFloat(inp.value)||0});
+  });
+  const hist=getH();
+  const sorted=hist.sort((a,b)=>b.vigDesde.localeCompare(a.vigDesde));
+  const prev=sorted.find(p=>!p.vigHasta);
+  if(prev){const d=new Date(desde);d.setDate(d.getDate()-1);prev.vigHasta=d.toISOString().slice(0,10);}
+  hist.push({id:'p'+Date.now(),vigDesde:desde,vigHasta:hasta||null,label,cats});
+  setH(hist);closeUpdateLimits();renderAll();
+}
+
+// ── IMPORT PDF (PDF.js, sin API Key) ─────────────────────────────────────
+let importQueue = [];
+let pdfJsLoaded = false;
+
+function loadPdfJs(cb) {
+  if (pdfJsLoaded) { cb(); return; }
+  const s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+  s.onload = () => {
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    pdfJsLoaded = true;
+    cb();
+  };
+  s.onerror = () => alert('No se pudo cargar PDF.js. Verificá tu conexión a internet.');
+  document.head.appendChild(s);
+}
+
+function openImport() {
+  const sec = document.getElementById('import-section');
+  sec.style.display = sec.style.display === 'none' ? 'block' : 'none';
+}
+function closeImport() {
+  document.getElementById('import-section').style.display = 'none';
+  document.getElementById('import-preview').style.display = 'none';
+  importQueue = [];
+  document.getElementById('file-input').value = '';
+}
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('drop-zone').classList.remove('drag-over');
+  handleFiles(e.dataTransfer.files);
+}
+function handleFiles(files) {
+  if (!files.length) return;
+  importQueue = Array.from(files)
+    .filter(f => f.name.toLowerCase().endsWith('.pdf'))
+    .map(f => ({ file: f, status: 'pending', extracted: null }));
+  if (!importQueue.length) { alert('Seleccioná archivos PDF de facturas ARCA/AFIP.'); return; }
+  renderImportPreview();
+  loadPdfJs(() => importQueue.forEach((item, i) => processFilePdfJs(item, i)));
+}
+
+// ARCA invoices have 3 identical pages (Original / Duplicado / Triplicado).
+// We only read page 1. PDF.js may return items in visual (non-reading) order,
+// so we join ALL items into one flat string — regexes match regardless of item order.
+async function extractTextFromPdf(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const page = await pdf.getPage(1);
+  const content = await page.getTextContent();
+  // Group items by Y with 3px tolerance to reconstruct visual lines, then sort left→right
+  const buckets = [];
+  content.items.forEach(item => {
+    const y = item.transform[5], x = item.transform[4];
+    let b = buckets.find(b => Math.abs(b.y - y) < 3);
+    if (!b) { b = { y, items: [] }; buckets.push(b); }
+    b.items.push({ x, str: item.str });
+  });
+  buckets.sort((a, b) => b.y - a.y);
+  buckets.forEach(b => b.items.sort((a, b) => a.x - b.x));
+  return buckets.map(b => b.items.map(i => i.str).join(' ')).join('\n');
+}
+
+// "1.460.766,20" or "1460766,20" → 1460766.20
+function parseArgNum(s) {
+  if (!s) return 0;
+  return parseFloat(s.trim().replace(/\s/g,'').replace(/\./g,'').replace(',','.')) || 0;
+}
+
+// "23/03/2026" → "2026-03-23"
+function parseArgDate(s) {
+  if (!s) return '';
+  const m = s.trim().match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  return m ? `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}` : '';
+}
+
+// Raw 11-digit string → "XX-XXXXXXXX-X"
+function formatCuit(raw) {
+  raw = (raw||'').replace(/\D/g,'');
+  return raw.length === 11 ? `${raw.slice(0,2)}-${raw.slice(2,10)}-${raw[10]}` : raw;
+}
+
+function parseArcaInvoice(text) {
+  let m;
+
+  // TIPO
+  let tipo = 'FC';
+  if (/NOTA\s+DE\s+CR[ÉE]DITO/i.test(text)) tipo = 'NC';
+  else if (/MIPYME/i.test(text))              tipo = 'MI';
+  else if (/COD[\.\s]+013/i.test(text))       tipo = 'NC';
+
+  // NRO — "Punto de Venta: 00003 Comp. Nro: 00000641"
+  // Allow up to 80 chars between the two parts in case PDF.js splits them
+  let nro = '';
+  m = text.match(/Punto\s+de\s+Venta[:\s]+0*(\d+)[\s\S]{0,80}?Comp[\.\s]+Nro[:\s]+0*(\d+)/i);
+  if (m) nro = `${m[1].padStart(4,'0')}-${m[2].padStart(8,'0')}`;
+
+  // FECHA EMISIÓN — "Fecha de Emisión: 23/03/2026"
+  let fechaFac = '';
+  m = text.match(/Fecha\s+de\s+Emisi[oó]n[:\s]+([\d]{1,2}\/[\d]{1,2}\/[\d]{4})/i);
+  if (m) fechaFac = parseArgDate(m[1]);
+
+  // FECHA DESDE — capture ONLY the first date after "Desde:" not "Hasta:" or "Vto."
+  let fechaDesde = '';
+  m = text.match(/Per[ií]odo\s+Facturado\s+Desde[:\s]+([\d]{1,2}\/[\d]{1,2}\/[\d]{4})/i);
+  if (m) fechaDesde = parseArgDate(m[1]);
+  if (!fechaDesde) fechaDesde = fechaFac;
+
+  // CUIT CLIENTE — receptor's CUIT immediately precedes "Apellido y Nombre / Razón Social"
+  let cuit = '';
+  m = text.match(/CUIT[:\s]+([\d]{11})\s+Apellido/i);
+  if (m) {
+    cuit = formatCuit(m[1]);
+  } else {
+    const allCuits = [...text.matchAll(/CUIT[:\s]+([\d]{11})/gi)];
+    if (allCuits.length >= 2) cuit = formatCuit(allCuits[1][1]);
+    else if (allCuits.length === 1) cuit = formatCuit(allCuits[0][1]);
+  }
+
+  // CLIENTE — text after "Razón Social:" (the receptor's, not the emisor's)
+  let cliente = '';
+  // Look specifically for the receptor block: "Apellido y Nombre / Razón Social:NAME"
+  m = text.match(/Apellido\s+y\s+Nombre\s*\/\s*Raz[oó]n\s+Social[:\s]+(.+?)(?=\n\w|Condici[oó]n|Domicilio|$)/is);
+  if (m) {
+    cliente = m[1].replace(/\n/g,' ').replace(/\s+/g,' ').trim();
+  } else {
+    // Fallback: second "Razón Social:" occurrence
+    const all = [...text.matchAll(/Raz[oó]n\s+Social[:\s]+(.+?)(?=\n|\s{2,}|$)/gi)];
+    if (all.length >= 2) cliente = all[1][1].trim();
+  }
+
+  // MONTO — "Importe Total: $ 1460766,20"
+  let monto = 0;
+  m = text.match(/Importe\s+Total[:\s]+\$\s*([\d.,]+)/i);
+  if (m) {
+    monto = parseArgNum(m[1]);
+  } else {
+    // Fallback: largest $ amount in document
+    const nums = [...text.matchAll(/\$\s*([\d]{1,3}(?:[.,]\d{3})*[.,]\d{2})/g)]
+      .map(x => parseArgNum(x[1])).filter(n => n > 100);
+    if (nums.length) monto = Math.max(...nums);
+  }
+
+  return { nro, tipo, fechaFac, fechaDesde, cliente, cuit, monto };
+}
+
+
+async function processFilePdfJs(item, idx) {
+  item.status = 'loading';
+  updateImportRow(idx);
+  try {
+    const text = await extractTextFromPdf(item.file);
+    item.rawText = text; // keep for debugging
+    const extracted = parseArcaInvoice(text);
+    // Basic validation
+    if (!extracted.fechaFac && !extracted.monto) throw new Error('No se pudieron extraer datos');
+    item.extracted = extracted;
+    item.status = extracted.monto ? 'ok' : 'warn';
+  } catch(e) {
+    item.status = 'error';
+    item.error = e.message;
+    item.extracted = { nro:'', tipo:'FC', fechaFac:'', fechaDesde:'', cliente:'', cuit:'', monto:'' };
+  }
+  updateImportRow(idx);
+}
+
+function renderImportPreview() {
+  document.getElementById('import-preview').style.display = 'block';
+  document.getElementById('import-errors').style.display = 'none';
+  const tbody = document.getElementById('import-tbody');
+  tbody.innerHTML = '';
+  importQueue.forEach((_, i) => { const tr = document.createElement('tr'); tr.id = `imp-row-${i}`; tbody.appendChild(tr); });
+  importQueue.forEach((_, i) => updateImportRow(i));
+}
+
+function updateImportRow(i) {
+  const item = importQueue[i], tr = document.getElementById(`imp-row-${i}`);
+  if (!tr) return;
+  const load = item.status === 'loading' || item.status === 'pending';
+  const e = item.extracted || {};
+  tr.className = item.status==='ok'?'imp-row-ok': item.status==='warn'?'imp-row-warn': item.status==='error'?'imp-row-err':'';
+  const debugBtn = !load && item.rawText
+    ? `<br><button class="btn btn-sm btn-outline" style="margin-top:3px;font-size:10px" onclick="showRawText(${i})">Ver texto</button>` : '';
+  const st = load
+    ? `<span class="spinner"></span><span class="imp-status warn">Leyendo PDF...</span>`
+    : item.status==='ok'  ? `<span class="imp-status ok">✓ Listo</span>${debugBtn}`
+    : item.status==='warn'? `<span class="imp-status warn">⚠ Revisar</span>${debugBtn}`
+    : `<span class="imp-status err" title="${item.error||''}">✗ Error</span>${debugBtn}`;
+  const flds = load
+    ? `<td colspan="7"><em style="color:#999;font-size:11px">Extrayendo datos del PDF...</em></td>`
+    : `<td><input class="upd-inp" style="width:115px" value="${e.nro||''}" onchange="importQueue[${i}].extracted.nro=this.value"></td>
+       <td><select class="upd-inp" style="width:80px" onchange="importQueue[${i}].extracted.tipo=this.value">
+         <option${e.tipo==='FC'?' selected':''} value="FC">FC</option>
+         <option${e.tipo==='NC'?' selected':''} value="NC">NC</option>
+         <option${e.tipo==='MI'?' selected':''} value="MI">MI</option>
+       </select></td>
+       <td><input class="upd-inp" style="width:110px" type="date" value="${e.fechaFac||''}" onchange="importQueue[${i}].extracted.fechaFac=this.value"></td>
+       <td><input class="upd-inp" style="width:110px" type="date" value="${e.fechaDesde||''}" onchange="importQueue[${i}].extracted.fechaDesde=this.value"></td>
+       <td><input class="upd-inp" style="width:100px" value="${e.cliente||''}" onchange="importQueue[${i}].extracted.cliente=this.value"></td>
+       <td class="r"><input class="upd-inp" style="width:100px;text-align:right" type="number" value="${e.monto||''}" onchange="importQueue[${i}].extracted.monto=parseFloat(this.value)||0"></td>`;
+  tr.innerHTML = `
+    <td><input type="checkbox" class="imp-chk" data-idx="${i}" ${item.status!=='error'?'checked':''}></td>
+    <td class="muted" style="max-width:110px;overflow:hidden;text-overflow:ellipsis" title="${item.file.name}">${item.file.name}</td>
+    ${flds}
+    <td>${st}</td>`;
+}
+
+function toggleAllImport(c) { document.querySelectorAll('.imp-chk').forEach(x => x.checked = c); }
+
+function showRawText(i) {
+  const text = importQueue[i]?.rawText || '(sin texto)';
+  const w = window.open('', '_blank', 'width=700,height=600,scrollbars=yes');
+  w.document.write(`<html><body style="font-family:monospace;font-size:12px;white-space:pre-wrap;padding:16px">
+<b>Texto extraído de: ${importQueue[i].file.name}</b>\n\n${text.replace(/</g,'&lt;')}
+</body></html>`);
+}
+
+function confirmImport() {
+  const checked = Array.from(document.querySelectorAll('.imp-chk:checked')).map(c => +c.dataset.idx);
+  if (!checked.length) { alert('Seleccioná al menos una factura.'); return; }
+  const facturas = getF(); let added = 0, skipped = 0;
+  checked.forEach(i => {
+    const e = importQueue[i].extracted;
+    if (!e || !e.fechaFac || !e.monto) { skipped++; return; }
+    facturas.push({
+      id: Date.now().toString() + '_' + i,
+      nro: e.nro||'', fechaFac: e.fechaFac,
+      fechaDesde: e.fechaDesde||e.fechaFac,
+      tipo: e.tipo||'FC', cliente: e.cliente||'',
+      cuit: e.cuit||'', monto: Math.abs(parseFloat(e.monto)||0)
+    });
+    added++;
+  });
+  setF(facturas); closeImport(); renderAll();
+  let msg = `✓ ${added} factura${added!==1?'s':''} importada${added!==1?'s':''}.`;
+  if (skipped) msg += ` ${skipped} omitida${skipped!==1?'s':''} por datos incompletos.`;
+  alert(msg);
+}
+
+// ── MODAL FACTURA ─────────────────────────────────────────
+let editId=null;
+function openModal(id){
+  editId=id||null;
+  document.getElementById('modal-title').textContent=id?'Editar comprobante':'Nueva factura';
+  const f=id?getF().find(x=>x.id===id):null;
+  document.getElementById('f-nro').value    =f?(f.nro||''):'';
+  document.getElementById('f-ffac').value   =f?f.fechaFac:today();
+  document.getElementById('f-fdesde').value =f?f.fechaDesde:today();
+  document.getElementById('f-tipo').value   =f?f.tipo:'FC';
+  document.getElementById('f-cliente').value=f?f.cliente:'';
+  document.getElementById('f-cuit').value   =f?f.cuit:'';
+  document.getElementById('f-monto').value  =f?Math.abs(f.monto):'';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
+document.getElementById('modal-overlay').addEventListener('click',e=>{if(e.target===document.getElementById('modal-overlay'))closeModal();});
+function saveFactura(){
+  const nro=document.getElementById('f-nro').value.trim(),ff=document.getElementById('f-ffac').value,
+    fd=document.getElementById('f-fdesde').value,tipo=document.getElementById('f-tipo').value,
+    cliente=document.getElementById('f-cliente').value.trim(),cuit=document.getElementById('f-cuit').value.trim(),
+    montoV=parseFloat(document.getElementById('f-monto').value);
+  if(!ff||!fd||!montoV){alert('Completá fecha de factura, fecha desde y monto.');return;}
+  const facturas=getF();
+  if(editId){const idx=facturas.findIndex(x=>x.id===editId);facturas[idx]={id:editId,nro,fechaFac:ff,fechaDesde:fd,tipo,cliente,cuit,monto:montoV};}
+  else facturas.push({id:Date.now().toString(),nro,fechaFac:ff,fechaDesde:fd,tipo,cliente,cuit,monto:montoV});
+  setF(facturas);closeModal();renderAll();
+}
+function delFactura(id){if(!confirm('¿Eliminar?'))return;setF(getF().filter(x=>x.id!==id));renderAll();}
+
+// ── TABS ──────────────────────────────────────────────────
+function showTab(n,el){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+n).classList.add('active');el.classList.add('active');
+}
+function renderAll(){renderDashboard();renderFacturas();renderMensual();renderCats();}
+
+renderAll();
+</script>
+</body>
+</html>
