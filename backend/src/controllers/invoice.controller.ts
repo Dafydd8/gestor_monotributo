@@ -1,6 +1,11 @@
 import { Response } from "express";
 import { AuthenticatedRequest } from "../middlewares/auth.middleware";
-import { createInvoice, getInvoicesByUser } from "../services/invoice.service";
+import {
+  createInvoice,
+  getInvoicesByUser,
+  updateInvoice,
+  deleteInvoice,
+} from "../services/invoice.service";
 import { createInvoiceSchema } from "../schemas/invoice.schema";
 import { parseInvoicePdf } from "../services/pdf-import.service";
 
@@ -91,5 +96,63 @@ export const confirmImport = async (
 
     console.error(error);
     return res.status(500).json({ error: "Error confirmando importación" });
+  }
+};
+
+export const update = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const invoiceId = Number(req.params.id);
+
+    const parsed = createInvoiceSchema.safeParse(req.body);
+
+    if (!parsed.success) {
+      return res.status(400).json({
+        error: "Datos inválidos",
+        details: parsed.error.flatten(),
+      });
+    }
+
+    const invoice = await updateInvoice({
+      invoiceId,
+      userId,
+      ...parsed.data,
+    });
+
+    return res.status(200).json({
+      message: "Factura actualizada correctamente",
+      invoice,
+    });
+  } catch (error: any) {
+    if (error.message === "INVOICE_NOT_FOUND") {
+      return res.status(404).json({ error: "Factura no encontrada" });
+    }
+
+    if (error.code === "P2002") {
+      return res.status(409).json({ error: "Ya existe una factura con esos datos" });
+    }
+
+    console.error(error);
+    return res.status(500).json({ error: "Error actualizando factura" });
+  }
+};
+
+export const remove = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const invoiceId = Number(req.params.id);
+
+    await deleteInvoice({ invoiceId, userId });
+
+    return res.status(200).json({
+      message: "Factura eliminada correctamente",
+    });
+  } catch (error: any) {
+    if (error.message === "INVOICE_NOT_FOUND") {
+      return res.status(404).json({ error: "Factura no encontrada" });
+    }
+
+    console.error(error);
+    return res.status(500).json({ error: "Error eliminando factura" });
   }
 };

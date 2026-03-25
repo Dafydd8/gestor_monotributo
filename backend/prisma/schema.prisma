@@ -29,6 +29,8 @@ model Invoice {
   invoice_number String
   invoice_date   DateTime
   total_amount   Float
+  client_name    String?   // 👈 nuevo
+  client_cuit    String?   // 👈 nuevo
 
   user User @relation(fields: [user_id], references: [id])
 
