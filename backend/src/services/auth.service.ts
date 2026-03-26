@@ -78,7 +78,6 @@ export const loginUser = async ({
   }
 
   cuit = cuit.replace(/-/g, "");
-  console.log("Attempting login for CUIT:", cuit);
   const user = await prisma.user.findUnique({
     where: { cuit },
   });
