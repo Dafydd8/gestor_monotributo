@@ -77,6 +77,8 @@ export const loginUser = async ({
     throw new Error("MISSING_FIELDS");
   }
 
+  cuit = cuit.replace(/-/g, "");
+  console.log("Attempting login for CUIT:", cuit);
   const user = await prisma.user.findUnique({
     where: { cuit },
   });
