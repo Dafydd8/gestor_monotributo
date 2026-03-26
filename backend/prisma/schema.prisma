@@ -13,12 +13,14 @@ datasource db {
 }
 
 model User {
-  id            Int      @id @default(autoincrement())
-  cuit          String   @unique
-  full_name     String
-  password_hash String
+  id                  Int       @id @default(autoincrement())
+  cuit                String    @unique
+  full_name           String
+  password_hash       String
+  current_category_id Int?
 
-  invoices      Invoice[]
+  current_category    Category? @relation(fields: [current_category_id], references: [id])
+  invoices            Invoice[]
 }
 
 model Invoice {
@@ -35,4 +37,24 @@ model Invoice {
   user User @relation(fields: [user_id], references: [id])
 
   @@unique([user_id, invoice_type, point_of_sale, invoice_number])
+}
+
+model Category {
+  id                       Int       @id @default(autoincrement())
+  code                     String
+  description              String?
+  max_annual_income        Float
+  max_unit_price           Float?
+  max_surface_m2           Float?
+  max_electric_consumption Float?
+  max_rent_amount          Float?
+  is_active                Boolean   @default(true)
+  effective_from           DateTime
+  effective_to             DateTime?
+  created_at               DateTime  @default(now())
+  updated_at               DateTime  @updatedAt
+
+  users                    User[]
+
+  @@unique([code, effective_from])
 }

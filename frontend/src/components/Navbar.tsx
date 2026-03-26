@@ -32,6 +32,10 @@ export default function Navbar() {
             <Link to="/invoices" className={linkClass("/invoices")}>
               Facturas
             </Link>
+
+            <Link to="/categories" className={linkClass("/categories")}>
+              Categorías
+            </Link>
           </nav>
         </div>
 

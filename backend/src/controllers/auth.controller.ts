@@ -24,9 +24,14 @@ export const login = async (req: Request, res: Response) => {
 
 export const register = async (req: Request, res: Response) => {
   try {
-    const { cuit, full_name, password } = req.body;
+    const { cuit, full_name, password, current_category_id } = req.body;
 
-    const result = await registerUser({ cuit, full_name, password });
+    const result = await registerUser({
+      cuit,
+      full_name,
+      password,
+      current_category_id,
+    });
 
     return res.status(201).json(result);
   } catch (error: any) {
@@ -36,6 +41,10 @@ export const register = async (req: Request, res: Response) => {
 
     if (error.message === "USER_ALREADY_EXISTS") {
       return res.status(409).json({ error: "Ya existe un usuario con ese CUIT" });
+    }
+
+    if (error.message === "INVALID_CATEGORY") {
+      return res.status(400).json({ error: "Categoría inválida" });
     }
 
     console.error(error);

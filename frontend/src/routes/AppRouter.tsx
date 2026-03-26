@@ -5,6 +5,7 @@ import DashboardPage from "../pages/DashboardPage";
 import InvoicesPage from "../pages/InvoicesPage";
 import ProtectedRoute from "./ProtectedRoute";
 import Layout from "../components/Layout";
+import CategoriesPage from "../pages/CategoriesPage";
 import { useAuth } from "../context/AuthContext";
 
 export default function AppRouter() {
@@ -36,6 +37,16 @@ export default function AppRouter() {
           <ProtectedRoute>
             <Layout>
                 <InvoicesPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/categories"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <CategoriesPage />
             </Layout>
           </ProtectedRoute>
         }

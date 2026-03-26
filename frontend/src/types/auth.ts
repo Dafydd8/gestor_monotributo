@@ -2,6 +2,7 @@ export type User = {
   id: number;
   cuit: string;
   full_name: string;
+  current_category_id?: number | null;
 };
 
 export type AuthResponse = {
@@ -19,4 +20,5 @@ export type RegisterPayload = {
   cuit: string;
   full_name: string;
   password: string;
+  current_category_id?: number;
 };

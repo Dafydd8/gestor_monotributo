@@ -6,12 +6,14 @@ type RegisterUserInput = {
   cuit: string;
   full_name: string;
   password: string;
+  current_category_id?: number;
 };
 
 export const registerUser = async ({
   cuit,
   full_name,
   password,
+  current_category_id,
 }: RegisterUserInput) => {
   if (!cuit || !full_name || !password) {
     throw new Error("MISSING_FIELDS");
@@ -25,6 +27,16 @@ export const registerUser = async ({
     throw new Error("USER_ALREADY_EXISTS");
   }
 
+  if (current_category_id) {
+    const category = await prisma.category.findUnique({
+      where: { id: current_category_id },
+    });
+
+    if (!category) {
+      throw new Error("INVALID_CATEGORY");
+    }
+  }
+
   const password_hash = await bcrypt.hash(password, 10);
 
   const user = await prisma.user.create({
@@ -32,6 +44,7 @@ export const registerUser = async ({
       cuit,
       full_name,
       password_hash,
+      current_category_id: current_category_id ?? null,
     },
   });
 
@@ -48,6 +61,7 @@ export const registerUser = async ({
       id: user.id,
       cuit: user.cuit,
       full_name: user.full_name,
+      current_category_id: user.current_category_id,
     },
   };
 };
