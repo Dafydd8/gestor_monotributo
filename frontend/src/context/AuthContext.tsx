@@ -10,6 +10,11 @@ import { authService } from "../services/auth.service";
 import { storage } from "../utils/storage";
 import type { LoginPayload, RegisterPayload, User } from "../types/auth";
 
+type UpdateCurrentUserPayload = {
+  full_name?: string;
+  current_category_id?: number | null;
+};
+
 type AuthContextType = {
   user: User | null;
   token: string | null;
@@ -17,6 +22,8 @@ type AuthContextType = {
   login: (payload: LoginPayload) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
   logout: () => void;
+  updateCurrentUser: (payload: UpdateCurrentUserPayload) => Promise<void>;
+  setUser: (user: User | null) => void;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -53,6 +60,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     storage.setUser(data.user);
   };
 
+  const updateCurrentUser = async (payload: UpdateCurrentUserPayload) => {
+    const data = await authService.updateMe(payload);
+
+    setUser(data.user);
+    storage.setUser(data.user);
+  };
+
   const logout = () => {
     setToken(null);
     setUser(null);
@@ -67,6 +81,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       register,
       logout,
+      updateCurrentUser,
+      setUser,
     }),
     [user, token]
   );

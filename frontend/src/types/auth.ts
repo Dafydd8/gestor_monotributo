@@ -3,6 +3,7 @@ export type User = {
   cuit: string;
   full_name: string;
   current_category_id?: number | null;
+  current_category_code?: string | null;
 };
 
 export type AuthResponse = {
