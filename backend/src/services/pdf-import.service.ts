@@ -41,14 +41,21 @@ export const parseInvoicePdf = async (
   const point_of_sale = posNumMatch?.[1] ?? null;
   const invoice_number = posNumMatch?.[2] ?? null;
 
-  const dateMatches = [...text.matchAll(/\b\d{2}\/\d{2}\/\d{4}\b/g)].map(
-    (m) => m[0]
-  );
-
   let invoice_date: string | null = null;
-  if (dateMatches.length >= 4) {
-    const [dd, mm, yyyy] = dateMatches[3].split("/");
-    invoice_date = `${yyyy}-${mm}-${dd}`;
+
+  const periodIndex = text.indexOf("Período Facturado Desde");
+
+  if (periodIndex !== -1) {
+    // agarramos un pedazo de texto después del label
+    const after = text.slice(periodIndex, periodIndex + 200);
+
+    // buscamos fechas en ese pedazo
+    const matches = [...after.matchAll(/\b\d{2}\/\d{2}\/\d{4}\b/g)];
+
+    if (matches.length > 0) {
+      const [dd, mm, yyyy] = matches[0][0].split("/");
+      invoice_date = `${yyyy}-${mm}-${dd}`;
+    }
   }
 
   let total_amount: number | null = null;
