@@ -9,6 +9,12 @@ type RegisterUserInput = {
   current_category_id?: number;
 };
 
+type UpdateCurrentUserInput = {
+  userId: number;
+  full_name?: string;
+  current_category_id?: number | null;
+};
+
 export const registerUser = async ({
   cuit,
   full_name,
@@ -46,6 +52,9 @@ export const registerUser = async ({
       password_hash,
       current_category_id: current_category_id ?? null,
     },
+    include: {
+      current_category: true,
+    },
   });
 
   const token = jwt.sign(
@@ -62,6 +71,7 @@ export const registerUser = async ({
       cuit: user.cuit,
       full_name: user.full_name,
       current_category_id: user.current_category_id,
+      current_category_code: user.current_category?.code ?? null,
     },
   };
 };
@@ -80,6 +90,9 @@ export const loginUser = async ({
   cuit = cuit.replace(/-/g, "");
   const user = await prisma.user.findUnique({
     where: { cuit },
+    include: {
+      current_category: true,
+    },
   });
 
   if (!user) {
@@ -105,6 +118,80 @@ export const loginUser = async ({
       id: user.id,
       cuit: user.cuit,
       full_name: user.full_name,
+      current_category_id: user.current_category_id,
+      current_category_code: user.current_category?.code ?? null,
+    },
+  };
+};
+
+export const updateCurrentUser = async ({
+  userId,
+  full_name,
+  current_category_id,
+}: UpdateCurrentUserInput) => {
+  if (!userId) {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  const existingUser = await prisma.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (!existingUser) {
+    throw new Error("USER_NOT_FOUND");
+  }
+
+  const data: {
+    full_name?: string;
+    current_category_id?: number | null;
+  } = {};
+
+  if (full_name !== undefined) {
+    const trimmedName = full_name.trim();
+
+    if (!trimmedName) {
+      throw new Error("INVALID_FULL_NAME");
+    }
+
+    data.full_name = trimmedName;
+  }
+
+  if (current_category_id !== undefined) {
+    if (current_category_id === null) {
+      data.current_category_id = null;
+    } else {
+      const category = await prisma.category.findUnique({
+        where: { id: current_category_id },
+      });
+
+      if (!category) {
+        throw new Error("INVALID_CATEGORY");
+      }
+
+      data.current_category_id = current_category_id;
+    }
+  }
+
+  if (Object.keys(data).length === 0) {
+    throw new Error("NOTHING_TO_UPDATE");
+  }
+
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data,
+    include: {
+      current_category: true,
+    },
+  });
+
+  return {
+    message: "Usuario actualizado correctamente",
+    user: {
+      id: user.id,
+      cuit: user.cuit,
+      full_name: user.full_name,
+      current_category_id: user.current_category_id,
+      current_category_code: user.current_category?.code ?? null,
     },
   };
 };
