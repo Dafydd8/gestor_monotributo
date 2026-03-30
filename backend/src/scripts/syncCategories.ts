@@ -2,8 +2,17 @@ import "dotenv/config";
 import axios from "axios";
 import * as cheerio from "cheerio";
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 
-const prisma = new PrismaClient();
+const connectionString = process.env.DATABASE_URL;
+
+if (!connectionString) {
+  throw new Error("DATABASE_URL is not set");
+}
+
+const adapter = new PrismaPg({ connectionString });
+
+const prisma = new PrismaClient({ adapter });
 
 const SOURCE_URL = "https://www.afip.gob.ar/monotributo/categorias.asp";
 
