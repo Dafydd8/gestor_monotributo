@@ -21,7 +21,14 @@ export type ParsedInvoice = {
   total_amount: number | null;
   client_name: string | null;
   client_cuit: string | null;
-  raw_text: string;
+  raw_text: string | null;
+};
+
+export type ImportedInvoiceRow = ParsedInvoice & {
+  local_id: string;
+  file_name: string;
+  success: boolean;
+  error: string | null;
 };
 
 export const invoiceService = {
@@ -48,13 +55,16 @@ export const invoiceService = {
     return response.data;
   },
 
-  importPdf: async (file: File) => {
+  importPdf: async (files: File[]) => {
     const formData = new FormData();
-    formData.append("file", file);
+
+    files.forEach((file) => {
+      formData.append("files", file);
+    });
 
     const response = await api.post<{
       message: string;
-      parsed: ParsedInvoice;
+      invoices: ImportedInvoiceRow[];
     }>("/invoices/import-pdf", formData, {
       headers: {
         "Content-Type": "multipart/form-data",

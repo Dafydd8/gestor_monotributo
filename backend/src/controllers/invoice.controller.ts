@@ -48,19 +48,50 @@ export const getMine = async (req: AuthenticatedRequest, res: Response) => {
 
 export const importPdf = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ error: "Falta el archivo PDF" });
+    const files = req.files as Express.Multer.File[] | undefined;
+
+    if (!files || files.length === 0) {
+      return res.status(400).json({ error: "Falta al menos un archivo PDF" });
     }
 
-    const parsed = await parseInvoicePdf(req.file.buffer);
+    const results = await Promise.all(
+      files.map(async (file, index) => {
+        try {
+          const parsed = await parseInvoicePdf(file.buffer);
+
+          return {
+            local_id: String(index + 1),
+            file_name: file.originalname,
+            success: true,
+            error: null,
+            ...parsed,
+          };
+        } catch (error: any) {
+          return {
+            local_id: String(index + 1),
+            file_name: file.originalname,
+            success: false,
+            error: error?.message || "No se pudo procesar el PDF",
+            invoice_type: null,
+            point_of_sale: null,
+            invoice_number: null,
+            invoice_date: null,
+            total_amount: null,
+            client_name: null,
+            client_cuit: null,
+            raw_text: null,
+          };
+        }
+      })
+    );
 
     return res.status(200).json({
-      message: "PDF procesado",
-      parsed,
+      message: "PDFs procesados",
+      invoices: results,
     });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ error: "Error procesando PDF" });
+    return res.status(500).json({ error: "Error procesando PDFs" });
   }
 };
 

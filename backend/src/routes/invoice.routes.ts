@@ -15,7 +15,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 router.post("/", authMiddleware, create);
 router.get("/", authMiddleware, getMine);
-router.post("/import-pdf", authMiddleware, upload.single("file"), importPdf);
+router.post("/import-pdf", authMiddleware, upload.array("files"), importPdf);
 router.post("/confirm-import", authMiddleware, confirmImport);
 router.put("/:id", authMiddleware, update);
 router.delete("/:id", authMiddleware, remove);

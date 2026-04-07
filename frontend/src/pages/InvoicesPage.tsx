@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import type { Invoice } from "../types/invoice";
-import { invoiceService, type ParsedInvoice } from "../services/invoice.service";
+import {
+  invoiceService,
+  type ImportedInvoiceRow,
+} from "../services/invoice.service";
 import InvoiceTable from "../components/InvoiceTable";
 import InvoiceForm from "../components/InvoiceForm";
 import PdfImportForm from "../components/PdfImportForm";
@@ -72,9 +75,11 @@ export default function InvoicesPage() {
     await fetchInvoices();
   };
 
-  const handleImportPdf = async (file: File): Promise<ParsedInvoice> => {
-    const result = await invoiceService.importPdf(file);
-    return result.parsed;
+  const handleImportPdf = async (
+    files: File[]
+  ): Promise<ImportedInvoiceRow[]> => {
+    const result = await invoiceService.importPdf(files);
+    return result.invoices;
   };
 
   const handleConfirmImport = async (values: {
@@ -88,7 +93,6 @@ export default function InvoicesPage() {
   }) => {
     await invoiceService.confirmImport(values);
     await fetchInvoices();
-    setFormMode("none");
   };
 
   return (

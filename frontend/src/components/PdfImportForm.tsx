@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import type { ParsedInvoice } from "../services/invoice.service";
+import type { ImportedInvoiceRow } from "../services/invoice.service";
 
 type ConfirmValues = {
   invoice_type: string;
@@ -11,108 +11,111 @@ type ConfirmValues = {
   client_cuit?: string;
 };
 
+type EditableInvoiceRow = ImportedInvoiceRow & {
+  selected: boolean;
+};
+
 type Props = {
-  onImport: (file: File) => Promise<ParsedInvoice>;
+  onImport: (files: File[]) => Promise<ImportedInvoiceRow[]>;
   onConfirm: (values: ConfirmValues) => Promise<void>;
 };
 
 export default function PdfImportForm({ onImport, onConfirm }: Props) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [parsed, setParsed] = useState<ParsedInvoice | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [rows, setRows] = useState<EditableInvoiceRow[]>([]);
   const [loadingImport, setLoadingImport] = useState(false);
   const [loadingConfirm, setLoadingConfirm] = useState(false);
   const [error, setError] = useState("");
-
-  const [formValues, setFormValues] = useState({
-    invoice_type: "",
-    point_of_sale: "",
-    invoice_number: "",
-    invoice_date: "",
-    total_amount: "",
-    client_name: "",
-    client_cuit: "",
-  });
+  const [successMessage, setSuccessMessage] = useState("");
 
   const handleImport = async () => {
-    if (!selectedFile) {
-      setError("Seleccioná un PDF.");
+    if (selectedFiles.length === 0) {
+      setError("Seleccioná al menos un PDF.");
       return;
     }
 
     try {
       setError("");
+      setSuccessMessage("");
       setLoadingImport(true);
 
-      const result = await onImport(selectedFile);
-      setParsed(result);
+      const importedRows = await onImport(selectedFiles);
 
-      setFormValues({
-        invoice_type: result.invoice_type ?? "",
-        point_of_sale: result.point_of_sale ?? "",
-        invoice_number: result.invoice_number ?? "",
-        invoice_date: result.invoice_date ?? "",
-        total_amount: result.total_amount ? String(result.total_amount) : "",
-        client_name: result.client_name ?? "",
-        client_cuit: result.client_cuit ?? "",
-      });
+      setRows(
+        importedRows.map((row) => ({
+          ...row,
+          selected: row.success,
+        }))
+      );
     } catch (err: any) {
-      setError(err?.response?.data?.error || "Error procesando PDF");
+      setError(err?.response?.data?.error || "Error procesando PDFs");
     } finally {
       setLoadingImport(false);
     }
   };
 
-  const handleChange = (field: string, value: string) => {
-    setFormValues((prev) => ({ ...prev, [field]: value }));
+  const handleChange = (
+    localId: string,
+    field: keyof EditableInvoiceRow,
+    value: string | boolean
+  ) => {
+    setRows((prev) =>
+      prev.map((row) =>
+        row.local_id === localId ? { ...row, [field]: value } : row
+      )
+    );
   };
 
-  const handleConfirm = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleConfirmAll = async () => {
     setError("");
+    setSuccessMessage("");
 
-    if (
-      !formValues.invoice_type ||
-      !formValues.point_of_sale ||
-      !formValues.invoice_number ||
-      !formValues.invoice_date ||
-      !formValues.total_amount
-    ) {
-      setError("Completá los campos obligatorios.");
+    const validRows = rows.filter((row) => row.selected && row.success);
+
+    if (validRows.length === 0) {
+      setError("No hay facturas seleccionadas para importar.");
       return;
     }
 
-    const amount = Number(formValues.total_amount);
-    if (Number.isNaN(amount) || amount <= 0) {
-      setError("El monto debe ser mayor a 0.");
-      return;
+    for (const row of validRows) {
+      if (
+        !row.invoice_type ||
+        !row.point_of_sale ||
+        !row.invoice_number ||
+        !row.invoice_date ||
+        row.total_amount === null ||
+        row.total_amount <= 0
+      ) {
+        setError(
+          `La factura "${row.file_name}" tiene campos obligatorios incompletos.`
+        );
+        return;
+      }
     }
 
     try {
       setLoadingConfirm(true);
 
-      await onConfirm({
-        invoice_type: formValues.invoice_type,
-        point_of_sale: formValues.point_of_sale,
-        invoice_number: formValues.invoice_number,
-        invoice_date: formValues.invoice_date,
-        total_amount: amount,
-        client_name: formValues.client_name || undefined,
-        client_cuit: formValues.client_cuit || undefined,
-      });
+      for (const row of validRows) {
+        await onConfirm({
+          invoice_type: row.invoice_type!,
+          point_of_sale: row.point_of_sale!,
+          invoice_number: row.invoice_number!,
+          invoice_date: row.invoice_date!,
+          total_amount: Number(row.total_amount),
+          client_name: row.client_name || undefined,
+          client_cuit: row.client_cuit || undefined,
+        });
+      }
 
-      setSelectedFile(null);
-      setParsed(null);
-      setFormValues({
-        invoice_type: "",
-        point_of_sale: "",
-        invoice_number: "",
-        invoice_date: "",
-        total_amount: "",
-        client_name: "",
-        client_cuit: "",
-      });
+      setSuccessMessage("Facturas importadas correctamente.");
+      setRows([]);
+      setSelectedFiles([]);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     } catch (err: any) {
       setError(err?.response?.data?.error || "Error confirmando importación");
     } finally {
@@ -125,7 +128,7 @@ export default function PdfImportForm({ onImport, onConfirm }: Props) {
       <div className="mb-5">
         <h2 className="text-xl font-semibold text-gray-900">Importar PDF</h2>
         <p className="mt-1 text-sm text-gray-500">
-          Subí una factura en PDF, revisá los datos detectados y confirmá la importación.
+          Subí una o varias facturas en PDF, revisá los datos detectados y confirmá la importación.
         </p>
       </div>
 
@@ -133,11 +136,20 @@ export default function PdfImportForm({ onImport, onConfirm }: Props) {
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="space-y-2">
             <div className="text-sm font-medium text-gray-900">
-              Archivo PDF
+              Archivos PDF
             </div>
             <div className="text-sm text-gray-500">
-              {selectedFile ? selectedFile.name : "Todavía no seleccionaste ningún archivo."}
+              {selectedFiles.length > 0
+                ? `${selectedFiles.length} archivo(s) seleccionado(s)`
+                : "Todavía no seleccionaste ningún archivo."}
             </div>
+            {selectedFiles.length > 0 && (
+              <ul className="list-disc pl-5 text-xs text-gray-500">
+                {selectedFiles.map((file) => (
+                  <li key={file.name}>{file.name}</li>
+                ))}
+              </ul>
+            )}
           </div>
 
           <div className="flex flex-wrap gap-3">
@@ -146,7 +158,7 @@ export default function PdfImportForm({ onImport, onConfirm }: Props) {
               onClick={() => fileInputRef.current?.click()}
               className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
             >
-              Elegir archivo
+              Elegir archivos
             </button>
 
             <button
@@ -155,7 +167,7 @@ export default function PdfImportForm({ onImport, onConfirm }: Props) {
               disabled={loadingImport}
               className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {loadingImport ? "Procesando..." : "Procesar PDF"}
+              {loadingImport ? "Procesando..." : "Procesar PDFs"}
             </button>
           </div>
         </div>
@@ -163,8 +175,9 @@ export default function PdfImportForm({ onImport, onConfirm }: Props) {
         <input
           ref={fileInputRef}
           type="file"
+          multiple
           accept="application/pdf"
-          onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+          onChange={(e) => setSelectedFiles(Array.from(e.target.files || []))}
           className="hidden"
         />
       </div>
@@ -175,88 +188,158 @@ export default function PdfImportForm({ onImport, onConfirm }: Props) {
         </div>
       )}
 
-      {parsed && (
-        <form onSubmit={handleConfirm} className="mt-6 space-y-4">
+      {successMessage && (
+        <div className="mt-4 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700">
+          {successMessage}
+        </div>
+      )}
+
+      {rows.length > 0 && (
+        <div className="mt-6 space-y-4">
           <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
-            PDF procesado. Revisá los datos antes de guardarlos.
+            PDFs procesados. Revisá los datos antes de guardarlos.
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Tipo</label>
-              <input
-                value={formValues.invoice_type}
-                onChange={(e) => handleChange("invoice_type", e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2"
-                placeholder="Tipo"
-              />
-            </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full border-collapse">
+              <thead>
+                <tr className="border-b border-gray-200 text-left text-sm text-gray-600">
+                  <th className="px-3 py-2">Importar</th>
+                  <th className="px-3 py-2">Archivo</th>
+                  <th className="px-3 py-2">Tipo</th>
+                  <th className="px-3 py-2">PV</th>
+                  <th className="px-3 py-2">Número</th>
+                  <th className="px-3 py-2">Fecha</th>
+                  <th className="px-3 py-2">Monto</th>
+                  <th className="px-3 py-2">Cliente</th>
+                  <th className="px-3 py-2">CUIT</th>
+                  <th className="px-3 py-2">Estado</th>
+                </tr>
+              </thead>
 
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Punto de venta</label>
-              <input
-                value={formValues.point_of_sale}
-                onChange={(e) => handleChange("point_of_sale", e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2"
-                placeholder="Punto de venta"
-              />
-            </div>
+              <tbody>
+                {rows.map((row) => (
+                  <tr
+                    key={row.local_id}
+                    className={`border-b border-gray-100 align-top ${
+                      !row.success ? "bg-red-50" : ""
+                    }`}
+                  >
+                    <td className="px-3 py-3">
+                      <input
+                        type="checkbox"
+                        checked={row.selected}
+                        disabled={!row.success || loadingConfirm}
+                        onChange={(e) =>
+                          handleChange(row.local_id, "selected", e.target.checked)
+                        }
+                      />
+                    </td>
 
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Número</label>
-              <input
-                value={formValues.invoice_number}
-                onChange={(e) => handleChange("invoice_number", e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2"
-                placeholder="Número"
-              />
-            </div>
+                    <td className="px-3 py-3 text-sm text-gray-700">
+                      {row.file_name}
+                    </td>
 
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Fecha</label>
-              <input
-                type="date"
-                value={formValues.invoice_date}
-                onChange={(e) => handleChange("invoice_date", e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2"
-              />
-            </div>
+                    <td className="px-3 py-3">
+                      <input
+                        value={row.invoice_type ?? ""}
+                        onChange={(e) =>
+                          handleChange(row.local_id, "invoice_type", e.target.value)
+                        }
+                        disabled={!row.success}
+                        className="w-20 rounded-lg border border-gray-300 px-2 py-1 text-sm"
+                      />
+                    </td>
 
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Monto</label>
-              <input
-                type="number"
-                value={formValues.total_amount}
-                onChange={(e) => handleChange("total_amount", e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2"
-                placeholder="Monto"
-              />
-            </div>
+                    <td className="px-3 py-3">
+                      <input
+                        value={row.point_of_sale ?? ""}
+                        onChange={(e) =>
+                          handleChange(row.local_id, "point_of_sale", e.target.value)
+                        }
+                        disabled={!row.success}
+                        className="w-24 rounded-lg border border-gray-300 px-2 py-1 text-sm"
+                      />
+                    </td>
 
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Cliente</label>
-              <input
-                value={formValues.client_name}
-                onChange={(e) => handleChange("client_name", e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2"
-                placeholder="Cliente"
-              />
-            </div>
+                    <td className="px-3 py-3">
+                      <input
+                        value={row.invoice_number ?? ""}
+                        onChange={(e) =>
+                          handleChange(row.local_id, "invoice_number", e.target.value)
+                        }
+                        disabled={!row.success}
+                        className="w-28 rounded-lg border border-gray-300 px-2 py-1 text-sm"
+                      />
+                    </td>
 
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">CUIT cliente</label>
-              <input
-                value={formValues.client_cuit}
-                onChange={(e) => handleChange("client_cuit", e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2"
-                placeholder="CUIT cliente"
-              />
-            </div>
+                    <td className="px-3 py-3">
+                      <input
+                        type="date"
+                        value={row.invoice_date ?? ""}
+                        onChange={(e) =>
+                          handleChange(row.local_id, "invoice_date", e.target.value)
+                        }
+                        disabled={!row.success}
+                        className="w-40 rounded-lg border border-gray-300 px-2 py-1 text-sm"
+                      />
+                    </td>
+
+                    <td className="px-3 py-3">
+                      <input
+                        type="number"
+                        value={row.total_amount ?? ""}
+                        onChange={(e) =>
+                          handleChange(
+                            row.local_id,
+                            "total_amount",
+                            e.target.value === "" ? "" : Number(e.target.value).toString()
+                          )
+                        }
+                        disabled={!row.success}
+                        className="w-32 rounded-lg border border-gray-300 px-2 py-1 text-sm"
+                      />
+                    </td>
+
+                    <td className="px-3 py-3">
+                      <input
+                        value={row.client_name ?? ""}
+                        onChange={(e) =>
+                          handleChange(row.local_id, "client_name", e.target.value)
+                        }
+                        disabled={!row.success}
+                        className="w-64 rounded-lg border border-gray-300 px-2 py-1 text-sm"
+                      />
+                    </td>
+
+                    <td className="px-3 py-3">
+                      <input
+                        value={row.client_cuit ?? ""}
+                        onChange={(e) =>
+                          handleChange(row.local_id, "client_cuit", e.target.value)
+                        }
+                        disabled={!row.success}
+                        className="w-36 rounded-lg border border-gray-300 px-2 py-1 text-sm"
+                      />
+                    </td>
+
+                    <td className="px-3 py-3 text-sm">
+                      {row.success ? (
+                        <span className="text-green-700">OK</span>
+                      ) : (
+                        <span className="text-red-600">{row.error}</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
 
           <div className="flex flex-wrap gap-3 pt-2">
             <button
-              type="submit"
+              type="button"
+              onClick={handleConfirmAll}
               disabled={loadingConfirm}
               className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
             >
@@ -266,16 +349,20 @@ export default function PdfImportForm({ onImport, onConfirm }: Props) {
             <button
               type="button"
               onClick={() => {
-                setParsed(null);
-                setSelectedFile(null);
+                setRows([]);
+                setSelectedFiles([]);
                 setError("");
+                setSuccessMessage("");
+                if (fileInputRef.current) {
+                  fileInputRef.current.value = "";
+                }
               }}
               className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
             >
               Cancelar
             </button>
           </div>
-        </form>
+        </div>
       )}
     </div>
   );
