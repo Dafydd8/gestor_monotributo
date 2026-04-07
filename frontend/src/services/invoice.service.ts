@@ -74,11 +74,25 @@ export const invoiceService = {
     return response.data;
   },
 
-  confirmImport: async (payload: CreateInvoicePayload) => {
-    const response = await api.post<{ message: string; invoice: Invoice }>(
-      "/invoices/confirm-import",
-      payload
-    );
+  confirmImport: async (payload: CreateInvoicePayload[]) => {
+    const response = await api.post<{
+      message: string;
+      imported_count: number;
+      error_count: number;
+      invoices: Array<{
+        index: number;
+        success: boolean;
+        invoice: Invoice;
+      }>;
+      errors: Array<{
+        index: number;
+        success: false;
+        error: string;
+      }>;
+    }>("/invoices/confirm-import", {
+      invoices: payload,
+    });
+
     return response.data;
   },
 };

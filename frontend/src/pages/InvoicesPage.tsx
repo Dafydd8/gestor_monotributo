@@ -82,17 +82,20 @@ export default function InvoicesPage() {
     return result.invoices;
   };
 
-  const handleConfirmImport = async (values: {
-    invoice_type: string;
-    point_of_sale: string;
-    invoice_number: string;
-    invoice_date: string;
-    total_amount: number;
-    client_name?: string;
-    client_cuit?: string;
-  }) => {
-    await invoiceService.confirmImport(values);
+  const handleConfirmImport = async (
+    values: {
+      invoice_type: string;
+      point_of_sale: string;
+      invoice_number: string;
+      invoice_date: string;
+      total_amount: number;
+      client_name?: string;
+      client_cuit?: string;
+    }[]
+  ) => {
+    const result = await invoiceService.confirmImport(values);
     await fetchInvoices();
+    return result;
   };
 
   return (

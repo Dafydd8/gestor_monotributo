@@ -17,7 +17,23 @@ type EditableInvoiceRow = ImportedInvoiceRow & {
 
 type Props = {
   onImport: (files: File[]) => Promise<ImportedInvoiceRow[]>;
-  onConfirm: (values: ConfirmValues) => Promise<void>;
+  onConfirm: (
+    values: ConfirmValues[]
+  ) => Promise<{
+    message: string;
+    imported_count: number;
+    error_count: number;
+    invoices: Array<{
+      index: number;
+      success: boolean;
+      invoice: any;
+    }>;
+    errors: Array<{
+      index: number;
+      success: false;
+      error: string;
+    }>;
+  }>;
 };
 
 export default function PdfImportForm({ onImport, onConfirm }: Props) {
@@ -98,19 +114,26 @@ export default function PdfImportForm({ onImport, onConfirm }: Props) {
     try {
       setLoadingConfirm(true);
 
-      for (const row of validRows) {
-        await onConfirm({
-          invoice_type: row.invoice_type!,
-          point_of_sale: row.point_of_sale!,
-          invoice_number: row.invoice_number!,
-          invoice_date: row.invoice_date!,
-          total_amount: Number(row.total_amount),
-          client_name: row.client_name || undefined,
-          client_cuit: row.client_cuit || undefined,
-        });
+      const payload = validRows.map((row) => ({
+        invoice_type: row.invoice_type!,
+        point_of_sale: row.point_of_sale!,
+        invoice_number: row.invoice_number!,
+        invoice_date: row.invoice_date!,
+        total_amount: Number(row.total_amount),
+        client_name: row.client_name || undefined,
+        client_cuit: row.client_cuit || undefined,
+      }));
+
+      const result = await onConfirm(payload);
+
+      if (result.error_count > 0) {
+        setSuccessMessage(
+          `Se importaron ${result.imported_count} factura(s), pero ${result.error_count} tuvieron error.`
+        );
+      } else {
+        setSuccessMessage("Facturas importadas correctamente.");
       }
 
-      setSuccessMessage("Facturas importadas correctamente.");
       setRows([]);
       setSelectedFiles([]);
       if (fileInputRef.current) {

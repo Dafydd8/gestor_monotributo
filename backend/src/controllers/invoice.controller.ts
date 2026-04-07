@@ -102,29 +102,89 @@ export const confirmImport = async (
   try {
     const userId = req.user!.userId;
 
-    const parsed = createInvoiceSchema.safeParse(req.body);
+    type InvoiceInput = {
+      invoice_type: string;
+      point_of_sale: string;
+      invoice_number: string;
+      invoice_date: string;
+      total_amount: number;
+      client_name?: string;
+      client_cuit?: string;
+    };
 
-    if (!parsed.success) {
+const invoicesInput: InvoiceInput[] = Array.isArray(req.body?.invoices)
+  ? req.body.invoices
+  : [req.body];
+
+    if (!invoicesInput.length) {
+      return res.status(400).json({ error: "No hay facturas para importar" });
+    }
+
+    const validationResults = invoicesInput.map((invoice, index) => {
+      const parsed = createInvoiceSchema.safeParse(invoice);
+
+      return {
+        index,
+        success: parsed.success,
+        data: parsed.success ? parsed.data : null,
+        error: parsed.success ? null : parsed.error.flatten(),
+      };
+    });
+
+    const invalidRows = validationResults.filter((row) => !row.success);
+
+    if (invalidRows.length > 0) {
       return res.status(400).json({
-        error: "Datos inválidos",
-        details: parsed.error.flatten(),
+        error: "Hay facturas con datos inválidos",
+        details: invalidRows.map((row) => ({
+          index: row.index,
+          error: row.error,
+        })),
       });
     }
 
-    const invoice = await createInvoice({
-      userId,
-      ...parsed.data,
-    });
+    const createdInvoices = [];
+    const rowErrors = [];
 
-    return res.status(201).json({
-      message: "Factura importada correctamente",
-      invoice,
-    });
-  } catch (error: any) {
-    if (error.code === "P2002") {
-      return res.status(409).json({ error: "La factura ya existe" });
+    for (let i = 0; i < validationResults.length; i++) {
+      const row = validationResults[i];
+
+      try {
+        const invoice = await createInvoice({
+          userId,
+          ...row.data!,
+        });
+
+        createdInvoices.push({
+          index: i,
+          success: true,
+          invoice,
+        });
+      } catch (error: any) {
+        if (error.code === "P2002") {
+          rowErrors.push({
+            index: i,
+            success: false,
+            error: "La factura ya existe",
+          });
+          continue;
+        }
+
+        throw error;
+      }
     }
 
+    return res.status(201).json({
+      message:
+        rowErrors.length > 0
+          ? "Importación parcial completada"
+          : "Facturas importadas correctamente",
+      imported_count: createdInvoices.length,
+      error_count: rowErrors.length,
+      invoices: createdInvoices,
+      errors: rowErrors,
+    });
+  } catch (error) {
     console.error(error);
     return res.status(500).json({ error: "Error confirmando importación" });
   }
