@@ -117,3 +117,29 @@ export const parseInvoicePdf = async (
     raw_text: text,
   };
 };
+
+export const parseMultipleInvoicePdfs = async (fileBuffers: Buffer[]) => {
+  const results = await Promise.all(
+    fileBuffers.map(async (buffer, index) => {
+      try {
+        const parsed = await parseInvoicePdf(buffer);
+
+        return {
+          index,
+          success: true,
+          data: parsed,
+          error: null,
+        };
+      } catch (error: any) {
+        return {
+          index,
+          success: false,
+          data: null,
+          error: error?.message || "No se pudo parsear el PDF",
+        };
+      }
+    })
+  );
+
+  return results;
+};
