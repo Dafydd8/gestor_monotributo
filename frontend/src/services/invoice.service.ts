@@ -6,6 +6,7 @@ type CreateInvoicePayload = {
   point_of_sale: string;
   invoice_number: string;
   invoice_date: string;
+  issue_date?: string;
   total_amount: number;
   client_name?: string;
   client_cuit?: string;
@@ -18,6 +19,7 @@ export type ParsedInvoice = {
   point_of_sale: string | null;
   invoice_number: string | null;
   invoice_date: string | null;
+  issue_date: string | null;
   total_amount: number | null;
   client_name: string | null;
   client_cuit: string | null;

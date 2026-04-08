@@ -76,6 +76,7 @@ export const importPdf = async (req: AuthenticatedRequest, res: Response) => {
             point_of_sale: null,
             invoice_number: null,
             invoice_date: null,
+            issue_date: null,
             total_amount: null,
             client_name: null,
             client_cuit: null,
@@ -107,6 +108,7 @@ export const confirmImport = async (
       point_of_sale: string;
       invoice_number: string;
       invoice_date: string;
+      issue_date?: string;
       total_amount: number;
       client_name?: string;
       client_cuit?: string;

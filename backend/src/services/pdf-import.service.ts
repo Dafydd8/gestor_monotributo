@@ -5,6 +5,7 @@ type ParsedInvoiceData = {
   point_of_sale: string | null;
   invoice_number: string | null;
   invoice_date: string | null;
+  issue_date: string | null;
   total_amount: number | null;
   client_name: string | null;
   client_cuit: string | null;
@@ -20,6 +21,11 @@ const normalizeAmount = (value: string): number | null => {
 const normalizeCuit = (value: string): string | null => {
   const digits = value.replace(/\D/g, "");
   return digits.length === 11 ? digits : null;
+};
+
+const normalizeDate = (value: string): string => {
+  const [dd, mm, yyyy] = value.split("/");
+  return `${yyyy}-${mm}-${dd}`;
 };
 
 export const parseInvoicePdf = async (
@@ -42,19 +48,34 @@ export const parseInvoicePdf = async (
   const invoice_number = posNumMatch?.[2] ?? null;
 
   let invoice_date: string | null = null;
+  let issue_date: string | null = null;
 
   const periodIndex = text.indexOf("Período Facturado Desde");
 
   if (periodIndex !== -1) {
-    // agarramos un pedazo de texto después del label
-    const after = text.slice(periodIndex, periodIndex + 200);
+    const afterPeriod = text.slice(periodIndex);
 
-    // buscamos fechas en ese pedazo
-    const matches = [...after.matchAll(/\b\d{2}\/\d{2}\/\d{4}\b/g)];
+    const endCandidates = [
+      afterPeriod.indexOf("Punto de Venta:"),
+      afterPeriod.indexOf("CUIT:"),
+      afterPeriod.indexOf("Código Producto / Servicio"),
+    ].filter((idx) => idx !== -1);
 
-    if (matches.length > 0) {
-      const [dd, mm, yyyy] = matches[0][0].split("/");
-      invoice_date = `${yyyy}-${mm}-${dd}`;
+    const blockEnd =
+      endCandidates.length > 0 ? Math.min(...endCandidates) : 300;
+
+    const block = afterPeriod.slice(0, blockEnd);
+
+    const dateMatches = [...block.matchAll(/\b\d{2}\/\d{2}\/\d{4}\b/g)].map(
+      (m) => m[0]
+    );
+
+    if (dateMatches.length >= 1) {
+      invoice_date = normalizeDate(dateMatches[0]);
+    }
+
+    if (dateMatches.length >= 4) {
+      issue_date = normalizeDate(dateMatches[3]);
     }
   }
 
@@ -81,7 +102,9 @@ export const parseInvoicePdf = async (
     if (cuitMatch) {
       client_cuit = normalizeCuit(cuitMatch[1]);
 
-      const afterCuit = block.slice(cuitMatch.index! + cuitMatch[1].length).trim();
+      const afterCuit = block
+        .slice(cuitMatch.index! + cuitMatch[1].length)
+        .trim();
 
       const stopTokens = [
         " Coronel ",
@@ -111,35 +134,10 @@ export const parseInvoicePdf = async (
     point_of_sale,
     invoice_number,
     invoice_date,
+    issue_date,
     total_amount,
     client_name,
     client_cuit,
     raw_text: text,
   };
-};
-
-export const parseMultipleInvoicePdfs = async (fileBuffers: Buffer[]) => {
-  const results = await Promise.all(
-    fileBuffers.map(async (buffer, index) => {
-      try {
-        const parsed = await parseInvoicePdf(buffer);
-
-        return {
-          index,
-          success: true,
-          data: parsed,
-          error: null,
-        };
-      } catch (error: any) {
-        return {
-          index,
-          success: false,
-          data: null,
-          error: error?.message || "No se pudo parsear el PDF",
-        };
-      }
-    })
-  );
-
-  return results;
 };

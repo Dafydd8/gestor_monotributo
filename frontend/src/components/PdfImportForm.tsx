@@ -6,6 +6,7 @@ type ConfirmValues = {
   point_of_sale: string;
   invoice_number: string;
   invoice_date: string;
+  issue_date?: string;
   total_amount: number;
   client_name?: string;
   client_cuit?: string;
@@ -119,6 +120,7 @@ export default function PdfImportForm({ onImport, onConfirm }: Props) {
         point_of_sale: row.point_of_sale!,
         invoice_number: row.invoice_number!,
         invoice_date: row.invoice_date!,
+        issue_date: row.issue_date || undefined,
         total_amount: Number(row.total_amount),
         client_name: row.client_name || undefined,
         client_cuit: row.client_cuit || undefined,
@@ -232,7 +234,8 @@ export default function PdfImportForm({ onImport, onConfirm }: Props) {
                   <th className="px-3 py-2">Tipo</th>
                   <th className="px-3 py-2">PV</th>
                   <th className="px-3 py-2">Número</th>
-                  <th className="px-3 py-2">Fecha</th>
+                  <th className="px-3 py-2">Fecha desde</th>
+                  <th className="px-3 py-2">Fecha emisión</th>
                   <th className="px-3 py-2">Monto</th>
                   <th className="px-3 py-2">Cliente</th>
                   <th className="px-3 py-2">CUIT</th>
@@ -302,6 +305,18 @@ export default function PdfImportForm({ onImport, onConfirm }: Props) {
                         value={row.invoice_date ?? ""}
                         onChange={(e) =>
                           handleChange(row.local_id, "invoice_date", e.target.value)
+                        }
+                        disabled={!row.success}
+                        className="w-40 rounded-lg border border-gray-300 px-2 py-1 text-sm"
+                      />
+                    </td>
+
+                    <td className="px-3 py-3">
+                      <input
+                        type="date"
+                        value={row.issue_date ?? ""}
+                        onChange={(e) =>
+                          handleChange(row.local_id, "issue_date", e.target.value)
                         }
                         disabled={!row.success}
                         className="w-40 rounded-lg border border-gray-300 px-2 py-1 text-sm"
