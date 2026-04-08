@@ -6,6 +6,12 @@ type Props = {
   onDelete: (invoice: Invoice) => void;
 };
 
+const formatDate = (value?: string | null) => {
+  if (!value) return "-";
+  const raw = value.slice(0, 10);
+  return new Date(`${raw}T12:00:00`).toLocaleDateString("es-AR");
+};
+
 export default function InvoiceTable({ invoices, onEdit, onDelete }: Props) {
   if (invoices.length === 0) {
     return (
@@ -24,7 +30,8 @@ export default function InvoiceTable({ invoices, onEdit, onDelete }: Props) {
               <th className="px-4 py-3 font-medium">Tipo</th>
               <th className="px-4 py-3 font-medium">Pto. venta</th>
               <th className="px-4 py-3 font-medium">Número</th>
-              <th className="px-4 py-3 font-medium">Fecha</th>
+              <th className="px-4 py-3 font-medium">Fecha desde</th>
+              <th className="px-4 py-3 font-medium">Fecha emisión</th>
               <th className="px-4 py-3 font-medium">Cliente</th>
               <th className="px-4 py-3 font-medium">Monto</th>
               <th className="px-4 py-3 font-medium">Acciones</th>
@@ -36,9 +43,8 @@ export default function InvoiceTable({ invoices, onEdit, onDelete }: Props) {
                 <td className="px-4 py-3">{invoice.invoice_type}</td>
                 <td className="px-4 py-3">{invoice.point_of_sale}</td>
                 <td className="px-4 py-3">{invoice.invoice_number}</td>
-                <td className="px-4 py-3">
-                  {new Date(invoice.invoice_date).toLocaleDateString("es-AR")}
-                </td>
+                <td className="px-4 py-3">{formatDate(invoice.invoice_date)}</td>
+                <td className="px-4 py-3">{formatDate(invoice.issue_date)}</td>
                 <td className="px-4 py-3">{invoice.client_name || "-"}</td>
                 <td className="px-4 py-3">
                   {invoice.total_amount.toLocaleString("es-AR", {

@@ -39,6 +39,7 @@ export default function InvoicesPage() {
     point_of_sale: string;
     invoice_number: string;
     invoice_date: string;
+    issue_date?: string;
     total_amount: number;
     client_name?: string;
     client_cuit?: string;
@@ -53,6 +54,7 @@ export default function InvoicesPage() {
     point_of_sale: string;
     invoice_number: string;
     invoice_date: string;
+    issue_date?: string;
     total_amount: number;
     client_name?: string;
     client_cuit?: string;
@@ -88,6 +90,7 @@ export default function InvoicesPage() {
       point_of_sale: string;
       invoice_number: string;
       invoice_date: string;
+      issue_date?: string;
       total_amount: number;
       client_name?: string;
       client_cuit?: string;
@@ -150,6 +153,7 @@ export default function InvoicesPage() {
             point_of_sale: editingInvoice.point_of_sale,
             invoice_number: editingInvoice.invoice_number,
             invoice_date: editingInvoice.invoice_date.slice(0, 10),
+            issue_date: editingInvoice.issue_date?.slice(0, 10) ?? "",
             total_amount: String(editingInvoice.total_amount),
             client_name: editingInvoice.client_name ?? "",
             client_cuit: editingInvoice.client_cuit ?? "",

@@ -5,6 +5,7 @@ type InvoiceFormValues = {
   point_of_sale: string;
   invoice_number: string;
   invoice_date: string;
+  issue_date: string;
   total_amount: string;
   client_name: string;
   client_cuit: string;
@@ -15,6 +16,7 @@ type SubmitValues = {
   point_of_sale: string;
   invoice_number: string;
   invoice_date: string;
+  issue_date?: string;
   total_amount: number;
   client_name?: string;
   client_cuit?: string;
@@ -32,6 +34,7 @@ const emptyValues: InvoiceFormValues = {
   point_of_sale: "",
   invoice_number: "",
   invoice_date: "",
+  issue_date: "",
   total_amount: "",
   client_name: "",
   client_cuit: "",
@@ -53,6 +56,7 @@ export default function InvoiceForm({
       point_of_sale: initialValues?.point_of_sale ?? "",
       invoice_number: initialValues?.invoice_number ?? "",
       invoice_date: initialValues?.invoice_date ?? "",
+      issue_date: initialValues?.issue_date ?? "",
       total_amount: initialValues?.total_amount ?? "",
       client_name: initialValues?.client_name ?? "",
       client_cuit: initialValues?.client_cuit ?? "",
@@ -92,6 +96,7 @@ export default function InvoiceForm({
         point_of_sale: values.point_of_sale,
         invoice_number: values.invoice_number,
         invoice_date: values.invoice_date,
+        issue_date: values.issue_date || undefined,
         total_amount: parsedAmount,
         client_name: values.client_name || undefined,
         client_cuit: values.client_cuit || undefined,
@@ -117,13 +122,55 @@ export default function InvoiceForm({
       </h2>
 
       <div className="mt-4 grid gap-4 md:grid-cols-2">
-        <input value={values.invoice_type} onChange={(e) => handleChange("invoice_type", e.target.value)} className="rounded-lg border border-gray-300 px-3 py-2" placeholder="Tipo" />
-        <input value={values.point_of_sale} onChange={(e) => handleChange("point_of_sale", e.target.value)} className="rounded-lg border border-gray-300 px-3 py-2" placeholder="Punto de venta" />
-        <input value={values.invoice_number} onChange={(e) => handleChange("invoice_number", e.target.value)} className="rounded-lg border border-gray-300 px-3 py-2" placeholder="Número" />
-        <input type="date" value={values.invoice_date} onChange={(e) => handleChange("invoice_date", e.target.value)} className="rounded-lg border border-gray-300 px-3 py-2" />
-        <input type="number" value={values.total_amount} onChange={(e) => handleChange("total_amount", e.target.value)} className="rounded-lg border border-gray-300 px-3 py-2" placeholder="Monto" />
-        <input value={values.client_name} onChange={(e) => handleChange("client_name", e.target.value)} className="rounded-lg border border-gray-300 px-3 py-2" placeholder="Cliente" />
-        <input value={values.client_cuit} onChange={(e) => handleChange("client_cuit", e.target.value)} className="rounded-lg border border-gray-300 px-3 py-2" placeholder="CUIT cliente" />
+        <input
+          value={values.invoice_type}
+          onChange={(e) => handleChange("invoice_type", e.target.value)}
+          className="rounded-lg border border-gray-300 px-3 py-2"
+          placeholder="Tipo"
+        />
+        <input
+          value={values.point_of_sale}
+          onChange={(e) => handleChange("point_of_sale", e.target.value)}
+          className="rounded-lg border border-gray-300 px-3 py-2"
+          placeholder="Punto de venta"
+        />
+        <input
+          value={values.invoice_number}
+          onChange={(e) => handleChange("invoice_number", e.target.value)}
+          className="rounded-lg border border-gray-300 px-3 py-2"
+          placeholder="Número"
+        />
+        <input
+          type="date"
+          value={values.invoice_date}
+          onChange={(e) => handleChange("invoice_date", e.target.value)}
+          className="rounded-lg border border-gray-300 px-3 py-2"
+        />
+        <input
+          type="date"
+          value={values.issue_date}
+          onChange={(e) => handleChange("issue_date", e.target.value)}
+          className="rounded-lg border border-gray-300 px-3 py-2"
+        />
+        <input
+          type="number"
+          value={values.total_amount}
+          onChange={(e) => handleChange("total_amount", e.target.value)}
+          className="rounded-lg border border-gray-300 px-3 py-2"
+          placeholder="Monto"
+        />
+        <input
+          value={values.client_name}
+          onChange={(e) => handleChange("client_name", e.target.value)}
+          className="rounded-lg border border-gray-300 px-3 py-2"
+          placeholder="Cliente"
+        />
+        <input
+          value={values.client_cuit}
+          onChange={(e) => handleChange("client_cuit", e.target.value)}
+          className="rounded-lg border border-gray-300 px-3 py-2"
+          placeholder="CUIT cliente"
+        />
       </div>
 
       {error && (

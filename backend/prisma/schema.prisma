@@ -30,6 +30,7 @@ model Invoice {
   point_of_sale  String
   invoice_number String
   invoice_date   DateTime
+  issue_date     DateTime?
   total_amount   Float
   client_name    String?   // 👈 nuevo
   client_cuit    String?   // 👈 nuevo

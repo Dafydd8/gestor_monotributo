@@ -1,11 +1,17 @@
 import { prisma } from "../db";
 
+const parseLocalDate = (value: string) => {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day, 12, 0, 0, 0);
+};
+
 type CreateInvoiceInput = {
   userId: number;
   invoice_type: string;
   point_of_sale: string;
   invoice_number: string;
   invoice_date: string;
+  issue_date?: string | null;
   total_amount: number;
   client_name?: string | null;
   client_cuit?: string | null;
@@ -17,6 +23,7 @@ export const createInvoice = async ({
   point_of_sale,
   invoice_number,
   invoice_date,
+  issue_date,
   total_amount,
   client_name,
   client_cuit,
@@ -27,7 +34,8 @@ export const createInvoice = async ({
       invoice_type,
       point_of_sale,
       invoice_number,
-      invoice_date: new Date(invoice_date),
+      invoice_date: parseLocalDate(invoice_date),
+      issue_date: issue_date ? parseLocalDate(issue_date) : null,
       total_amount,
       client_name,
       client_cuit,
@@ -38,7 +46,10 @@ export const createInvoice = async ({
 export const getInvoicesByUser = async (userId: number) => {
   return prisma.invoice.findMany({
     where: { user_id: userId },
-    orderBy: { invoice_date: "desc" },
+    orderBy: [
+      { issue_date: "desc" },
+      { invoice_date: "desc" },
+    ],
   });
 };
 
@@ -49,6 +60,7 @@ export const updateInvoice = async ({
   point_of_sale,
   invoice_number,
   invoice_date,
+  issue_date,
   total_amount,
   client_name,
   client_cuit,
@@ -59,6 +71,7 @@ export const updateInvoice = async ({
   point_of_sale: string;
   invoice_number: string;
   invoice_date: string;
+  issue_date?: string | null;
   total_amount: number;
   client_name?: string | null;
   client_cuit?: string | null;
@@ -80,7 +93,8 @@ export const updateInvoice = async ({
       invoice_type,
       point_of_sale,
       invoice_number,
-      invoice_date: new Date(invoice_date),
+      invoice_date: parseLocalDate(invoice_date),
+      issue_date: issue_date ? parseLocalDate(issue_date) : null,
       total_amount,
       client_name,
       client_cuit,
