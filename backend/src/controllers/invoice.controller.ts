@@ -28,7 +28,11 @@ export const create = async (req: AuthenticatedRequest, res: Response) => {
     });
 
     return res.status(201).json(invoice);
-  } catch (error) {
+  } catch (error: any) {
+    if (error.code === "P2002") {
+      return res.status(409).json({ error: "Ya existe una factura con esos datos" });
+    }
+
     console.error(error);
     return res.status(500).json({ error: "Error creando factura" });
   }
